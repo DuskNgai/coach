@@ -28,7 +28,7 @@ MODEL:
     NAME: "build_pytorch_criterion"
     TYPE: "MSELoss"
 
-OUTPUT_DIR: "output"
+OUTPUT_DIR: "nerf/output"
 SOLVER:
   AMP:
     ENABLED: False
