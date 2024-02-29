@@ -7,9 +7,9 @@
 ```bash
 conda create -n coach python=3.11
 conda activate coach
-conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
-conda install ipykernel
-pip install fvcore omegaconf tensorboard
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+conda install ipykernel tensorboard
+pip install fvcore omegaconf
 ```
 
 ## 使用方法

@@ -5,9 +5,9 @@ import torch.nn as nn
 from coach.config import configurable, CfgNode
 from coach.modeling.architecture import MODEL_REGISTRY
 from coach.modeling.criterion import build_criterion, Criterion
-from coach.modeling.nerf.sampler import build_sampler, Sampler
-from coach.modeling.nerf.scene import build_scene, Scene
-from coach.modeling.nerf.renderer import build_renderer, Renderer
+from nerf.modeling.sampler import build_sampler, Sampler
+from nerf.modeling.scene import build_scene, Scene
+from nerf.modeling.renderer import build_renderer, Renderer
 
 __all__ = ["NeRF"]
 
@@ -59,3 +59,13 @@ class NeRF(nn.Module):
         outputs = self.renderer(attributes)
         losses = self.criterion(outputs)
         return losses
+
+    def inference(self, batched_inputs: dict[str, Any]) -> dict[str, Any]:
+        """
+        Args:
+            batched_inputs (dict[str, Any]): A batch of inputs.
+        """
+        queries = self.sampler(batched_inputs)
+        attributes = self.scene(queries)
+        outputs = self.renderer(attributes)
+        return outputs
