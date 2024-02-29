@@ -12,6 +12,13 @@ class Encoder(nn.Module, metaclass=ABCMeta):
     def __init__(self) -> None:
         super().__init__()
 
+    @property
+    def out_channels(self) -> int:
+        """
+        The number of channels of the output feature.
+        """
+        pass
+
     @abstractmethod
     def forward(self) -> None:
         """

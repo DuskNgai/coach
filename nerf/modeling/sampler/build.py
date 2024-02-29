@@ -21,5 +21,5 @@ def build_sampler(cfg: CfgNode) -> Sampler:
     sampler_name = cfg.MODEL.SAMPLER.NAME
     sampler = SAMPLER_REGISTRY.get(sampler_name)(cfg)
     sampler.to(torch.device(cfg.MODEL.DEVICE))
-    log_api_usage("modeling.sampler.{}".format(sampler_name))
+    log_api_usage("nerf.modeling.sampler.{}".format(sampler_name))
     return sampler

@@ -23,5 +23,5 @@ def build_scene(cfg: CfgNode) -> Scene:
     scene_name = cfg.MODEL.SCENE.NAME
     scene = SCENE_REGISTRY.get(scene_name)(cfg)
     scene.to(torch.device(cfg.MODEL.DEVICE))
-    log_api_usage("modeling.scene.{}".format(scene_name))
+    log_api_usage("nerf.modeling.scene.{}".format(scene_name))
     return scene

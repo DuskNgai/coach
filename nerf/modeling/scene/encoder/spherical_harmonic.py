@@ -15,6 +15,13 @@ class SphericalHarmonicEncoder(Encoder):
 
         self.enc_funcs = generate_sh_funcs(self.n_degrees)
 
+    @property
+    def out_channels(self) -> int:
+        """
+        See also: `Encoder.out_channels`.
+        """
+        return (self.n_degrees + 1) ** 2
+
     def forward(self, tensor_in: torch.Tensor) -> torch.Tensor:
         x, y, z = torch.split(tensor_in, 1, dim=-1)
         tensor_out = torch.cat(self.enc_funcs(x, y, z), dim=-1)

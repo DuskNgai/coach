@@ -2,56 +2,70 @@ import torch
 import torch.nn as nn
 
 from coach.config import CfgNode
+from coach.modeling.layer import Mlp
 
 from .build import SCENE_REGISTRY
 from .scene import Scene
-from .encoder import build_encoder
+from .encoder import build_positional_encoder, build_directional_encoder, Encoder
 
 __all__ = ["VanillaScene"]
 
 class VanillaScene(Scene):
 
     def __init__(self,
-        positional_encoder: nn.Module,
-        directional_encoder: nn.Module,
+        positional_encoder: Encoder,
+        directional_encoder: Encoder,
         mlp_width: int = 256,
         mlp_depth: int = 8,
         skip_connection: bool = True
     ):
         super().__init__()
+        act_layer = nn.ReLU
 
         self.positional_encoder = positional_encoder
         self.directional_encoder = directional_encoder
+        self.act_layer = act_layer()
 
-        # #* Stage 1 of NeRF MLP.
-        # self.stage1 = build_mlp(
-        #     config["network"]["stage_1_network"],
-        #     in_dim=self.pos_encoder.out_dim
-        # )
+        #* Stage 1 of NeRF MLP.
+        self.stage1 = Mlp(
+            in_channels=self.positional_encoder.out_channels,
+            hidden_layers=5 - 1,
+            hidden_channels=mlp_width,
+            act_layer=act_layer,
+        )
 
-        # #* Stage 2 of NeRF MLP, starting from a skip connection.
-        # self.stage2 = build_mlp(
-        #     config["network"]["stage_2_network"],
-        #     in_dim=self.pos_encoder.out_dim + config["network"]["stage_2_network"]["mlp_width"]
-        # )
+        #* Stage 2 of NeRF MLP, starting from a skip connection.
+        self.stage2 = Mlp(
+            in_channels=self.positional_encoder.out_channels + mlp_width,
+            hidden_layers=mlp_depth - 2 - (5 - 1),
+            hidden_channels=mlp_width,
+            act_layer=act_layer,
+        )
 
-        # #* Network for predicting density.
-        # self.density_net = build_mlp(
-        #     config["network"]["density_network"],
-        #     out_dim=1
-        # )
+        #* Network for predicting density.
+        self.density_net = Mlp(
+            in_channels=mlp_width,
+            hidden_layers=0,
+            out_channels=1,
+            act_layer=act_layer,
+        )
 
-        # #* Network for connecting stage2 and rgb.
-        # self.feature_net = build_mlp(
-        #     config["network"]["feature_network"]
-        # )
+        #* Network for connecting stage2 and rgb.
+        self.feature_net = Mlp(
+            in_channels=mlp_width,
+            hidden_layers=0,
+            out_channels=mlp_width // 2,
+            act_layer=act_layer,
+        )
 
-        # #* Network for predicting rgb, no activation function after the last layer.
-        # self.rgb_net = build_mlp(
-        #     config["network"]["rgb_network"],
-        #     in_dim=self.dir_encoder.out_dim + config["network"]["feature_network"]["mlp_width"],
-        #     out_dim=3
-        # )
+        #* Network for predicting rgb, no activation function after the last layer.
+        self.rgb_net = Mlp(
+            in_channels=self.directional_encoder.out_channels + mlp_width // 2,
+            hidden_layers=1,
+            hidden_channels=mlp_width // 2,
+            out_channels=3,
+            act_layer=act_layer
+        )
 
     def forward(self, queries: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         """
@@ -68,13 +82,13 @@ class VanillaScene(Scene):
         encoded_pos = self.pos_encoder(xyzs)
         encoded_dir = self.dir_encoder(dirs)
 
-        feature_1 = self.stage1(encoded_pos)
-        feature_2 = self.stage2(torch.cat([encoded_pos, feature_1], dim=-1))
+        feature_1 = self.act_layer(self.stage1(encoded_pos))
+        feature_2 = self.act_layer(self.stage2(torch.cat([encoded_pos, feature_1], dim=-1)))
 
-        densities = self.density_net(feature_2)
+        densities = torch.exp(self.density_net(feature_2))
 
-        feature_before_rgb = self.feature_net(feature_2)
-        colors = self.rgb_net(torch.cat([encoded_dir, feature_before_rgb], dim=-1))
+        feature_3 = self.act_layer(self.feature_net(feature_2))
+        colors = torch.sigmoid(self.rgb_net(torch.cat([encoded_dir, feature_3], dim=-1)))
 
         attributes = {
             "xyz": xyzs,
@@ -90,10 +104,11 @@ def build_vanilla_scene(cfg: CfgNode) -> VanillaScene:
     It does not load checkpoints from `cfg`.
     """
     scene = VanillaScene(
-        positional_encoder=build_encoder(cfg.MODEL.SCENE.POSITIONAL_ENCODER),
-        directional_encoder=build_encoder(cfg.MODEL.SCENE.DIRECTIONAL_ENCODER),
+        positional_encoder=build_positional_encoder(cfg),
+        directional_encoder=build_directional_encoder(cfg),
         mlp_width=cfg.MODEL.SCENE.MLP_WIDTH,
         mlp_depth=cfg.MODEL.SCENE.MLP_DEPTH,
         skip_connection=cfg.MODEL.SCENE.SKIP_CONNECTION
     )
+    print(scene)
     return scene

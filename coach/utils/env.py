@@ -11,6 +11,11 @@ import torch
 
 __all__ = ["seed_all_rng"]
 
+TORCH_VERSION = tuple(int(x) for x in torch.__version__.split(".")[:2])
+"""
+PyTorch version as a tuple of 2 ints. Useful for comparison.
+"""
+
 def seed_all_rng(seed: int = None) -> None:
     """
     Seed all the random number generators in random, numpy and torch.

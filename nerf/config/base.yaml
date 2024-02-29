@@ -18,8 +18,12 @@ MODEL:
 
   SCENE:
     NAME: "build_vanilla_scene"
-    POSITIONAL_ENCODER: "build_trigonometric_encoder"
-    DIRECTIONAL_ENCODER: "build_trigonometric_encoder"
+    POSITIONAL_ENCODER:
+      NAME: "build_trigonometric_encoder"
+      N_FREQUENCIES: 10
+    DIRECTIONAL_ENCODER:
+      NAME: "build_trigonometric_encoder"
+      N_FREQUENCIES: 4
 
   RENDERER:
     NAME: "build_volume_renderer"
