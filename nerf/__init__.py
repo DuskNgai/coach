@@ -1,1 +1,2 @@
-from nerf.modeling import NeRF
+import nerf.dataset
+import nerf.modeling

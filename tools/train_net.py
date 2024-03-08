@@ -8,7 +8,10 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from coach.checkpoint import CoachCheckpointer
 from coach.config import CfgNode, get_cfg
-from coach.engine import DefaultTrainer, default_argument_parser, default_setup, hooks, launch
+from coach.engine import DefaultTrainer, default_argument_parser, default_setup, launch
+
+# Just put the imports here, so that the import order is correct.
+import project
 
 def setup_cfg(args: argparse.Namespace) -> CfgNode:
     """

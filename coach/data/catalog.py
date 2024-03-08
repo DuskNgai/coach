@@ -1,5 +1,8 @@
 from collections import UserDict
-from typing import Callable
+import inspect
+from typing import Any
+
+import torch.utils.data as torch_data
 
 __all__ = [
     "DatasetCatalogSingleton"
@@ -9,10 +12,8 @@ class DatasetCatalog(UserDict):
     """
     A global dictionary that stores information about the datasets and how to obtain them.
 
-    It contains a mapping from strings
-    (which are names that identify a dataset, e.g. "?")
-    to a function which parses the dataset and returns the samples in the
-    format of `list[dict]`.
+    It contains a mapping from strings (which are names that identify a dataset, e.g. "?")
+    to a class
 
     The returned dicts should be in Detectron2 Dataset format (See DATASETS.md for details)
     if used with the data loader functionalities in `data/build.py,data/detection_transform.py`.
@@ -21,36 +22,35 @@ class DatasetCatalog(UserDict):
     different datasets, by just using the strings in the config.
     """
 
-    def register(self, name: str, func: Callable) -> None:
+    def register(self, name: str, cls) -> None:
         """
         Args:
             name (str): the name that identifies a dataset, e.g. "?".
-            func (callable): a callable which takes no arguments and returns a list of dicts.
-                It must return the same results if called multiple times.
         """
-        assert callable(func), "You must register a function with `DatasetCatalog.register`!"
+        assert inspect.isclass(cls), "You must register a function with `DatasetCatalog.register`!"
         assert name not in self, "Dataset '{}' is already registered!".format(name)
-        self[name] = func
+        self[name] = cls
 
-    def get(self, name: str) -> list[dict]:
+    def get(self, name: str, *param: Any) -> torch_data.Dataset:
         """
         Call the registered function and return its results.
 
         Args:
             name (str): the name that identifies a dataset, e.g. "?".
+            param (Any): the parameters to pass to the dataset constructor.
 
         Returns:
-            list[dict]: dataset annotations.
+            torch_data.Dataset: the dataset loaded from the given path.
         """
         try:
-            f = self[name]
+            cls = self[name]
         except KeyError as e:
             raise KeyError(
                 "Dataset '{}' is not registered! Available datasets are: {}".format(
                     name, ", ".join(list(self.keys()))
                 )
             ) from e
-        return f()
+        return cls(*param)
 
     def list(self) -> list[str]:
         """

@@ -5,8 +5,20 @@ DATALOADER:
   RAY_BATCH_SIZE: 4096
 
   SAMPLER_TRAIN: "TrainingSampler"
+
 DATASETS:
-  TRAIN: []
+  TRAIN: 
+    NAMES: ["BlenderDataset"]
+    PARAMS: [
+      ["NeRF_Data/nerf_synthetic/chair/train"]
+    ]
+
+  TEST:
+    NAMES: []
+    PARAMS: [
+      []
+    ]
+
 MODEL:
   DEVICE: "cuda"
   NAME: "NeRF"

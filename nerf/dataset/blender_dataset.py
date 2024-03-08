@@ -5,25 +5,19 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 import torch
-import torchvision.transforms
 from torch.utils import data
 import tqdm
 
 class BlenderDataset(data.Dataset):
-    def __init__(self,
-        config: dict
-    ):
+    def __init__(self, root_dir: str):
         super(BlenderDataset, self).__init__()
 
-        dataset_path = config["dataset"]["dataset_path"]
-
         #* Read json file.
-        transforms_path = Path(dataset_path).joinpath("transforms.json")
+        transforms_path = Path(root_dir).joinpath("transforms.json")
         with open(transforms_path, mode='r') as f:
             transforms = json.load(f)
 
-        self.angles = transforms["camera_angle_x"]
-        self.n_camera = len(transforms["frames"])
+        self.n_views = len(transforms["frames"])
 
         #* load images and poses
         images, poses = [], []
@@ -33,7 +27,7 @@ class BlenderDataset(data.Dataset):
             poses.append(poses)
 
             #* load images
-            image_path = Path(dataset_path).join(frame["file_path"])
+            image_path = Path(root_dir).join(frame["file_path"])
             with Image.open(image_path) as img:
                 image = torch.from_numpy(np.array(img) / 255.0) # [H, W, C]
 
@@ -62,9 +56,8 @@ class BlenderDataset(data.Dataset):
         #* Get `near_fars` for each image.
         self.translation = self.poses[:, 0:3, 3:4]
 
-
     def __len__(self) -> int:
-        return self.n_camera
+        return self.n_views
 
     def __getitem__(self, index: int) -> torch.Tensor:
         return self.poses[index], self.intrinsic, self.images[index], self.mask, self.near_far

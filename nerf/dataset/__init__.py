@@ -1,1 +1,1 @@
-from blender_dataset import BlenderDataset
+from . import register as _register

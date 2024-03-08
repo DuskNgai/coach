@@ -15,12 +15,17 @@ __all__ = [
     "build_coach_test_loader"
 ]
 
-def get_dataset_dicts(names: str | list[str]) -> torch_data.Dataset:
+def get_dataset(names: list[str], params: list[list[Any]]) -> torch_data.Dataset:
     """
     Get the dataset dicts from the dataset catalog.
 
     Args:
         names (list[str]): The names of the datasets to get.
+        params (list[list[Any]]): The parameters to pass to the dataset constructor,
+            in the same order as the names.
+
+    Returns:
+        torch_data.Dataset: The single dataset or the concatenated dataset.
     """
     if isinstance(names, str):
         names = [names]
@@ -34,14 +39,17 @@ def get_dataset_dicts(names: str | list[str]) -> torch_data.Dataset:
             names_set - available_datasets
         ))
 
-    dataset_dicts = [DatasetCatalogSingleton.get(name) for name in names]
+    dataset = [DatasetCatalogSingleton.get(name, *param) for name, param in zip(names, params)]
 
-    # TODO: Concatenate the dataset dicts.
+    if len(dataset) > 1:
+        return torch_data.ConcatDataset(dataset)
+    else:
+        return dataset[0]
 
 def _train_loader_from_config(cfg: CfgNode) -> dict[str, Any]:
     logger = logging.getLogger(__name__)
 
-    dataset = get_dataset_dicts(cfg.DATASETS.TRAIN)
+    dataset = get_dataset(cfg.DATASETS.TRAIN.NAMES, cfg.DATASETS.TRAIN.PARAMS)
 
     if isinstance(dataset, torch_data.IterableDataset):
         logger.info("Using iterable dataset, sampler will be ignored.")

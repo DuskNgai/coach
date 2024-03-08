@@ -35,7 +35,14 @@ _C.DATALOADER.SAMPLER_TRAIN = "TrainingSampler"
 # -----------------------------------------------------------------------------
 
 _C.DATASETS = CN()
-_C.DATASETS.TRAIN = []
+
+_C.DATASETS.TRAIN = CN()
+_C.DATASETS.TRAIN.NAMES = []
+_C.DATASETS.TRAIN.PARAMS = []
+
+_C.DATASETS.TEST = CN()
+_C.DATASETS.TEST.NAMES = []
+_C.DATASETS.TEST.PARAMS = []
 
 # -----------------------------------------------------------------------------
 # Model
