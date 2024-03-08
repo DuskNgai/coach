@@ -116,9 +116,9 @@ def configurable(init_func: Callable = None, *, from_config: Callable[[Any], dic
             def wrapped(*args, **kwargs):
                 if _called_with_cfg(*args, **kwargs):
                     explicit_args = _get_args_from_cfg(from_config, *args, **kwargs)
-                    func(**explicit_args)
+                    return func(**explicit_args)
                 else:
-                    func(*args, **kwargs)
+                    return func(*args, **kwargs)
 
             wrapped.from_config = from_config
             return wrapped

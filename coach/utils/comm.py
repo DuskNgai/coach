@@ -1,6 +1,7 @@
 import functools
 from typing import TypeVar
 
+import numpy as np
 import torch
 import torch.distributed as dist
 
@@ -15,6 +16,7 @@ def get_world_size() -> int:
         return 1
     return dist.get_world_size()
 
+
 def get_rank() -> int:
     """
     Returns:
@@ -26,12 +28,14 @@ def get_rank() -> int:
         return 0
     return dist.get_rank()
 
+
 def is_main_process() -> bool:
     """
     Returns:
         (bool): True if the current process is the main process.
     """
     return get_rank() == 0
+
 
 _LOCAL_PROCESS_GROUP = None
 _MISSING_LOCAL_PG_ERROR = (
@@ -40,6 +44,7 @@ _MISSING_LOCAL_PG_ERROR = (
     "processes in other ways, please call `comm.create_local_process_group("
     "num_workers_per_machine)` after calling `torch.distributed.init_process_group()`."
 )
+
 
 @functools.lru_cache()
 def create_local_process_group(num_gpus_per_machine: int) -> None:
@@ -62,6 +67,7 @@ def create_local_process_group(num_gpus_per_machine: int) -> None:
         if i == machine_rank:
             _LOCAL_PROCESS_GROUP = pg
 
+
 def get_local_process_group() -> dist.ProcessGroup:
     """
     Returns:
@@ -69,6 +75,7 @@ def get_local_process_group() -> dist.ProcessGroup:
     """
     assert _LOCAL_PROCESS_GROUP is not None, _MISSING_LOCAL_PG_ERROR
     return _LOCAL_PROCESS_GROUP
+
 
 def get_local_size() -> int:
     """
@@ -82,6 +89,7 @@ def get_local_size() -> int:
     assert _LOCAL_PROCESS_GROUP is not None, _MISSING_LOCAL_PG_ERROR
     return dist.get_world_size(group=_LOCAL_PROCESS_GROUP)
 
+
 def get_local_rank() -> int:
     """
     Returns:
@@ -93,6 +101,7 @@ def get_local_rank() -> int:
         return 0
     assert _LOCAL_PROCESS_GROUP is not None, _MISSING_LOCAL_PG_ERROR
     return dist.get_rank(group=_LOCAL_PROCESS_GROUP)
+
 
 def synchronize() -> None:
     """
@@ -111,6 +120,7 @@ def synchronize() -> None:
     else:
         dist.barrier()
 
+
 @functools.lru_cache()
 def _get_global_gloo_group() -> dist.ProcessGroup:
     """
@@ -122,7 +132,9 @@ def _get_global_gloo_group() -> dist.ProcessGroup:
     else:
         return dist.group.WORLD
 
+
 T = TypeVar('T')
+
 
 def all_gather(data: T, group=None) -> list[T]:
     """
@@ -149,6 +161,7 @@ def all_gather(data: T, group=None) -> list[T]:
     buffer = [None for _ in range(world_size)]
     dist.all_gather_object(buffer, data, group=group)
     return buffer
+
 
 def gather(data: T, dst: int, group=None) -> list[T]:
     """
@@ -181,3 +194,17 @@ def gather(data: T, dst: int, group=None) -> list[T]:
     else:
         dist.gather_object(data, None, dst=dst, group=group)
         return []
+
+
+def shared_random_seed():
+    """
+    Returns:
+        (int): a random number that is the same across all workers.
+        If workers need a shared RNG, they can use this shared seed to
+        create one.
+
+    All workers must call this function, otherwise it will deadlock.
+    """
+    ints = np.random.randint(2 ** 31)
+    all_ints = all_gather(ints)
+    return all_ints[0]

@@ -53,16 +53,15 @@ class SimpleTrainer(TrainerBase):
         self.model = model
         self.model.train()
 
-        if isinstance(data_loader, torch_data.DataLoader):
-            self.data_loader = data_loader
-        else:
-            self.data_loader = iter(data_loader)
+        self.data_loader = iter(data_loader)
         self.optimizer = optimizer
 
         self.gather_metrics_freq = gather_metrics_freq
         self.zero_grad_before_step = zero_grad_before_step
         self.async_write_metrics = async_write_metrics
         self.concurrency_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+
+        self.register_hooks(self.build_hooks())
 
     def step(self) -> None:
         assert self.model.training, "Model is not in training mode."

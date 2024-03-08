@@ -254,7 +254,7 @@ def reduce_param_groups(params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 def build_scheduler(cfg: CfgNode, optimizer: Optimizer) -> LRScheduler:
     """Return a scheduler with a given configuration."""
 
-    name = cfg.SOLVER.SCHEDULER.NAME
+    name = cfg.SOLVER.SCHEDULER
 
     if name == "MultiStepParamScheduler":
         steps = list(filter(lambda x: x <= cfg.SOLVER.MAX_ITER, cfg.SOLVER.STEPS))
@@ -287,6 +287,6 @@ def build_scheduler(cfg: CfgNode, optimizer: Optimizer) -> LRScheduler:
         cfg.SOLVER.WARMUP_FACTOR,
         min(cfg.SOLVER.WARMUP_ITERS / cfg.SOLVER.MAX_ITER, 1.0),
         cfg.SOLVER.WARMUP_METHOD,
-        cfg.SOLVER.WARMUP_INTERVAL
+        cfg.SOLVER.RESCALE_INTERVAL
     )
     return LRMultiplier(optimizer, scheduler, max_iter=cfg.SOLVER.MAX_ITER)

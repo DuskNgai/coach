@@ -4,13 +4,13 @@ DATALOADER:
   IMAGE_BATCH_SIZE: 1
   RAY_BATCH_SIZE: 4096
 
-  SAMPLER_TRAIN: "TrainingSampler"
+  SAMPLER_TRAIN: TrainingSampler
 
 DATASETS:
   TRAIN: 
-    NAMES: ["BlenderDataset"]
+    NAMES: [BlenderDataset]
     PARAMS: [
-      ["NeRF_Data/nerf_synthetic/chair/train"]
+      [/home/vrlab/share/nerf-dataset/nerf_synthetic/hotdog]
     ]
 
   TEST:
@@ -20,31 +20,31 @@ DATASETS:
     ]
 
 MODEL:
-  DEVICE: "cuda"
-  NAME: "NeRF"
+  DEVICE: cuda
+  NAME: NeRF
   WEIGHTS:
 
   SAMPLER:
-    NAME: "build_random_sampler"
-    PROJECTION: "perspective"
+    NAME: build_random_sampler
+    PROJECTION: perspective
 
   SCENE:
-    NAME: "build_vanilla_scene"
+    NAME: build_vanilla_scene
     POSITIONAL_ENCODER:
-      NAME: "build_trigonometric_encoder"
+      NAME: build_trigonometric_encoder
       N_FREQUENCIES: 10
     DIRECTIONAL_ENCODER:
-      NAME: "build_trigonometric_encoder"
+      NAME: build_trigonometric_encoder
       N_FREQUENCIES: 4
 
   RENDERER:
-    NAME: "build_volume_renderer"
+    NAME: build_volume_renderer
 
   CRITERION:
-    NAME: "build_pytorch_criterion"
-    TYPE: "MSELoss"
+    NAME: build_pytorch_criterion
+    TYPE: MSELoss
 
-OUTPUT_DIR: "nerf/output"
+OUTPUT_DIR: nerf/output
 SOLVER:
   AMP:
     ENABLED: False
@@ -61,6 +61,8 @@ SOLVER:
   WARMUP_FACTOR: 0.001
   WARMUP_ITERS: 500
   WARMUP_METHOD: linear
+
+  SCHEDULER: MultiStepParamScheduler
 TEST:
   EVAL_PERIOD: 5000
 VERSION: 1

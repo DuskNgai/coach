@@ -23,6 +23,7 @@ __all__ = [
     "TensorboardXWriter",
 ]
 
+
 class EventStorage(object):
     """
     The user-facing class that provides metric storage functionalities.
@@ -177,7 +178,9 @@ class EventStorage(object):
         assert _EVENT_STORAGE_STACK[-1] is self, "Nesting violation!"
         _EVENT_STORAGE_STACK.pop()
 
+
 _EVENT_STORAGE_STACK: list[EventStorage] = []
+
 
 def has_event_storage() -> bool:
     """
@@ -185,12 +188,14 @@ def has_event_storage() -> bool:
     """
     return len(_EVENT_STORAGE_STACK) > 0
 
+
 def get_event_storage() -> EventStorage:
     """
     Get the topmost `EventStorage` (currenly being used) in the stack.
     """
     assert has_event_storage(), "`get_event_storage()` has to be called inside a 'with EventStorage(...)' context!"
     return _EVENT_STORAGE_STACK[-1]
+
 
 class EventWriter(object):
     """
@@ -208,6 +213,7 @@ class EventWriter(object):
         Close the writer.
         """
         pass
+
 
 class CommonMetricPrinter(EventWriter):
     """
@@ -244,7 +250,7 @@ class CommonMetricPrinter(EventWriter):
             return eta
 
     def write(self):
-        storage =  get_event_storage()
+        storage = get_event_storage()
         iteration = storage.iteration
 
         # No data logged if training process is ended.
@@ -293,13 +299,11 @@ class CommonMetricPrinter(EventWriter):
                 ]),
                 time="avg time: {:.4f} (last: {:.4f})".format(avg_time, last_time) if avg_time is not None else "",
                 data_time="avg data time: {:.4f} (last: {:.4f})".format(avg_data_time, last_data_time) if avg_data_time is not None else "",
-                lr="{:.4e}".format(lr),
+                lr="{:.4e}".format(lr) if lr is not None else "N/A",
                 memory="max memory: {:.4f} MB".format(max_memory) if max_memory is not None else "",
             )
         )
 
-    def close(self):
-        ...
 
 class JSONWriter(EventWriter):
     """
@@ -343,6 +347,7 @@ class JSONWriter(EventWriter):
 
     def close(self) -> None:
         self._file_handle.close()
+
 
 class TensorboardXWriter(EventWriter):
     """

@@ -3,72 +3,13 @@ import weakref
 
 from coach.utils.events import EventStorage
 from coach.utils.logger import log_api_usage
+from coach.utils import comm
+
+from .hooks import *
 
 __all__ = [
-    "HookBase",
     "TrainerBase",
 ]
-
-class HookBase(object):
-    """
-    Base class for hooks that can be registered with `TrainerBase`.
-    
-    >>> hook.before_train()
-    >>> for iter in range(start_iter, max_iter):
-    >>>     hook.before_step()
-    >>>     trainer.step()
-    >>>     hook.after_step()
-    >>> hook.after_train()
-
-    Notes:
-        1. There is a weak reference to the trainer object, so you can access
-           the trainer via `self.trainer()`.
-        2. If there is something that can be done either in `before_step` or in `after_step`,
-           always prefer `after_step` as it `before_step` should only take negligible amount of time.
-           Following this convention will allow hooks that do care about the difference between
-           `before_step` and `after_step` (e.g. timer) to work properly.
-    """
-
-    # A weak reference to the trainer object.
-    trainer = None
-
-    def before_train(self):
-        """
-        Called before the first iteration.
-        """
-        pass
-
-    def after_train(self):
-        """
-        Called after the last iteration.
-        """
-        pass
-
-    def before_step(self):
-        """
-        Called before each iteration.
-        """
-        pass
-
-    def after_step(self):
-        """
-        Called after each iteration.
-        """
-        pass
-
-    def after_backward(self):
-        """
-        Called after the backward pass of each iteration.
-        """
-        pass
-
-    def state_dict(self):
-        """
-        Hooks are stateless by default.
-        By overriding `state_dict` and `load_state_dict`,
-        hooks can be made checkpointable.
-        """
-        return {}
 
 class TrainerBase(object):
     """
@@ -101,9 +42,25 @@ class TrainerBase(object):
 
         hooks = list(filter(None, hooks))
         for h in hooks:
-            assert isinstance(h, HookBase)
+            assert isinstance(h, hooks.HookBase)
             h.trainer = weakref.proxy(self)
         self._hooks.extend(hooks)
+
+    def build_hooks(self) -> list[HookBase]:
+        result = [
+            IterationTimer(),
+            LRScheduler()
+        ]
+
+        # Do PreciseBN before checkpointer,
+        # because it updates the model and need to be saved by checkpointer.
+        if comm.is_main_process():
+            result.append(PeriodicCheckpointer(self.checkpointer, self.cfg.SOLVER.CHECKPOINT_PERIOD))
+
+        if comm.is_main_process():
+            result.append(PeriodicWriter(self.build_writers(), period=self.cfg.SOLVER.LOG_PERIOD))
+
+        return result
 
     def train(self, start_iter: int, max_iter: int) -> None:
         """

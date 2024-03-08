@@ -26,7 +26,6 @@ from coach.utils.logger import setup_logger
 from .base_trainer import TrainerBase
 from .amp_trainer import AMPTrainer
 from .simple_trainer import SimpleTrainer
-from . import hooks
 
 __all__ = [
     "create_ddp_model",
@@ -252,24 +251,6 @@ class DefaultTrainer(TrainerBase):
         self.start_iter = 0
         self.max_iter = cfg.SOLVER.MAX_ITER
         self.cfg = cfg
-
-        self.register_hooks(self.build_hooks())
-
-    def build_hooks(self) -> list[hooks.HookBase]:
-        result = [
-            hooks.IterationTimer(),
-            hooks.LRScheduler()
-        ]
-
-        # Do PreciseBN before checkpointer,
-        # because it updates the model and need to be saved by checkpointer.
-        if comm.is_main_process():
-            result.append(hooks.PeriodicCheckpointer(self.checkpointer, self.cfg.SOLVER.CHECKPOINT_PERIOD))
-
-        if comm.is_main_process():
-            result.append(hooks.PeriodicWriter(self.build_writers(), period=self.cfg.SOLVER.LOG_PERIOD))
-
-        return result
 
     def resume_or_load(self, resume: bool = True) -> None:
         self.checkpointer.resume_or_load(self.cfg.MODEL.WEIGHTS, resume=resume)

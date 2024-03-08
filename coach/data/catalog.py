@@ -31,13 +31,14 @@ class DatasetCatalog(UserDict):
         assert name not in self, "Dataset '{}' is already registered!".format(name)
         self[name] = cls
 
-    def get(self, name: str, *param: Any) -> torch_data.Dataset:
+    def get(self, name: str, *args: Any, **kwargs: Any) -> torch_data.Dataset:
         """
         Call the registered function and return its results.
 
         Args:
             name (str): the name that identifies a dataset, e.g. "?".
-            param (Any): the parameters to pass to the dataset constructor.
+            args (Any): the parameters to pass to the dataset constructor.
+            kwargs (Any): the parameters to pass to the dataset constructor.
 
         Returns:
             torch_data.Dataset: the dataset loaded from the given path.
@@ -50,7 +51,7 @@ class DatasetCatalog(UserDict):
                     name, ", ".join(list(self.keys()))
                 )
             ) from e
-        return cls(*param)
+        return cls(*args, **kwargs)
 
     def list(self) -> list[str]:
         """

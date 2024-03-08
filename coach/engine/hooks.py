@@ -14,14 +14,76 @@ import torch
 from coach.utils.events import EventWriter
 from coach.solver.scheduler import LRMultiplier
 
-from .base_trainer import HookBase
-
 __all__ = [
+    "HookBase",
     "IterationTimer",
     "LRScheduler",
     "PeriodicCheckpointer",
     "PeriodicWriter",
 ]
+
+
+class HookBase(object):
+    """
+    Base class for hooks that can be registered with `TrainerBase`.
+    
+    >>> hook.before_train()
+    >>> for iter in range(start_iter, max_iter):
+    >>>     hook.before_step()
+    >>>     trainer.step()
+    >>>     hook.after_step()
+    >>> hook.after_train()
+
+    Notes:
+        1. There is a weak reference to the trainer object, so you can access
+           the trainer via `self.trainer()`.
+        2. If there is something that can be done either in `before_step` or in `after_step`,
+           always prefer `after_step` as it `before_step` should only take negligible amount of time.
+           Following this convention will allow hooks that do care about the difference between
+           `before_step` and `after_step` (e.g. timer) to work properly.
+    """
+
+    # A weak reference to the trainer object.
+    trainer = None
+
+    def before_train(self):
+        """
+        Called before the first iteration.
+        """
+        pass
+
+    def after_train(self):
+        """
+        Called after the last iteration.
+        """
+        pass
+
+    def before_step(self):
+        """
+        Called before each iteration.
+        """
+        pass
+
+    def after_step(self):
+        """
+        Called after each iteration.
+        """
+        pass
+
+    def after_backward(self):
+        """
+        Called after the backward pass of each iteration.
+        """
+        pass
+
+    def state_dict(self):
+        """
+        Hooks are stateless by default.
+        By overriding `state_dict` and `load_state_dict`,
+        hooks can be made checkpointable.
+        """
+        return {}
+
 
 class IterationTimer(HookBase):
     """
@@ -49,7 +111,7 @@ class IterationTimer(HookBase):
         total_time_minus_hooks = self._total_timer.seconds()
         hook_time = total_time - total_time_minus_hooks
 
-        num_iter = self.trainer.storage.iter + 1 - self.trainer.start_iter - self._warmup_iter
+        num_iter = self.trainer.storage.iteration + 1 - self.trainer.start_iter - self._warmup_iter
 
         if num_iter > 0 and total_time_minus_hooks > 0:
             # Speed is meaningful only after warmup
@@ -105,13 +167,13 @@ class LRScheduler(HookBase):
         self._scheduler = scheduler
 
     @property
-    def scheduler(self):
+    def scheduler(self) -> torch.optim.lr_scheduler._LRScheduler:
         if self._scheduler is None:
             self._scheduler = self.trainer.scheduler
         return self._scheduler
 
     @property
-    def optimizer(self):
+    def optimizer(self) -> torch.optim.Optimizer:
         if self._optimizer is None:
             self._optimizer = self.trainer.optimizer
         return self._optimizer
