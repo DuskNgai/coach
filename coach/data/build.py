@@ -19,6 +19,7 @@ __all__ = [
     "build_coach_test_loader"
 ]
 
+
 def get_dataset(names: list[str], params: list[list[Any]], is_train: bool = True) -> torch_data.Dataset:
     """
     Get the dataset dicts from the dataset catalog.

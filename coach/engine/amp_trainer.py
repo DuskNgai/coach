@@ -13,6 +13,7 @@ __all__ = [
     "AMPTrainer"
 ]
 
+
 class AMPTrainer(SimpleTrainer):
     """
     Inherit from SimpleTrainer and add support for automatic mixed precision (AMP).

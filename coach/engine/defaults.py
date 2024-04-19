@@ -35,6 +35,7 @@ __all__ = [
     "DefaultTrainer",
 ]
 
+
 def _try_get_key(cfg: CfgNode, *keys, default=None) -> Any:
     """
     Try to get the value of the key from the config. Otherwise, return the default value.
@@ -230,6 +231,7 @@ class DefaultTrainer(TrainerBase):
 
     def __init__(self, cfg: CfgNode) -> None:
         super().__init__()
+
         logger = logging.getLogger("Coach")
         if not logger.isEnabledFor(logging.INFO):
             setup_logger()
@@ -245,12 +247,13 @@ class DefaultTrainer(TrainerBase):
         )
         self.scheduler = DefaultTrainer.build_scheduler(cfg, optimizer)
         self.checkpointer = CoachCheckpointer(
-            self._trainer.model, cfg.OUTPUT_DIR, trainer=weakref.proxy(self)
+            model, cfg.OUTPUT_DIR, trainer=weakref.proxy(self)
         )
 
         self.start_iter = 0
         self.max_iter = cfg.SOLVER.MAX_ITER
         self.cfg = cfg
+        self.register_hooks(self.build_hooks())
 
     def resume_or_load(self, resume: bool = True) -> None:
         self.checkpointer.resume_or_load(self.cfg.MODEL.WEIGHTS, resume=resume)
@@ -280,6 +283,18 @@ class DefaultTrainer(TrainerBase):
 
     def build_writers(self) -> list[EventWriter]:
         return default_writers(self.cfg.OUTPUT_DIR, self.max_iter)
+
+    @property
+    def model(self):
+        return self._trainer.model
+    
+    @property
+    def optimizer(self):
+        return self._trainer.optimizer
+    
+    @property
+    def data_loader(self):
+        return self._trainer.data_loader
 
     @classmethod
     def build_model(cls, cfg: CfgNode) -> torch.nn.Module:

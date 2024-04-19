@@ -13,6 +13,7 @@ __all__ = [
     "setup_logger",
 ]
 
+
 class _ColoredFormatter(logging.Formatter):
     def __init__(self, *args, **kwargs):
         self._root_name = kwargs.pop("root_name") + "."

@@ -15,7 +15,7 @@ pip install fvcore omegaconf
 ## 使用方法
 
 ```bash
-python tools/train_net.py --config-file nerf/config/base.yaml
+python tools/train_net.py --config-file project/nerf/config/base.yaml
 ```
 
 在环境中可以设定环境变量。可选的有

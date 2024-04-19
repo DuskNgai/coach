@@ -2,9 +2,9 @@ from collections import defaultdict
 import importlib.util
 import os
 import re
-import tabulate
 import subprocess
 import sys
+import tabulate
 
 import numpy as np
 import PIL
@@ -25,7 +25,7 @@ def collect_torch_env() -> str:
         return get_pretty_env_info()
 
 def get_env_module() -> tuple[str, str]:
-    env_module = "Coach_ENV_MODULE"
+    env_module = "COACH_ENV_MODULE"
     return env_module, os.environ.get(env_module, "<not set>")
 
 def detect_compute_compatibility(CUDA_HOME, so_file) -> str:

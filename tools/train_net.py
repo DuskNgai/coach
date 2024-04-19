@@ -10,7 +10,7 @@ from coach.checkpoint import CoachCheckpointer
 from coach.config import CfgNode, get_cfg
 from coach.engine import DefaultTrainer, default_argument_parser, default_setup, launch
 
-# Just put the imports here, so that the import order is correct.
+# Just put it here to make the import order correct.
 import project
 
 def setup_cfg(args: argparse.Namespace) -> CfgNode:

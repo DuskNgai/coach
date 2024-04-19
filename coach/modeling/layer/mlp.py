@@ -5,6 +5,7 @@ import torch.nn as nn
 
 __all__ = ["Mlp"]
 
+
 class Mlp(nn.Module):
     """
     Mlp without last activation function.

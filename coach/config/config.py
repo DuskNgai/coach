@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 
 from fvcore.common.config import CfgNode
 from omegaconf import DictConfig
@@ -9,6 +9,19 @@ __all__ = [
     "get_cfg",
     "configurable"
 ]
+
+
+def get_cfg() -> CfgNode:
+    """
+    Get a copy of the default config.
+
+    Returns:
+        a coach CfgNode instance.
+    """
+    from .defaults import _C
+
+    return _C.clone()
+
 
 def _called_with_cfg(*args, **kwargs) -> bool:
     """
@@ -25,7 +38,8 @@ def _called_with_cfg(*args, **kwargs) -> bool:
         return True
     return False
 
-def _get_args_from_cfg(from_config_func: Callable[[Any], dict[str, Any]], *args, **kwargs) -> dict[str, Any]:
+
+def _get_args_from_cfg(from_config_func: Callable[[Any], Dict[str, Any]], *args, **kwargs) -> Dict[str, Any]:
     """
     Get the input arguments of the decorated function from a `CfgNode` object.
 
@@ -54,18 +68,8 @@ def _get_args_from_cfg(from_config_func: Callable[[Any], dict[str, Any]], *args,
 
     return result
 
-def get_cfg() -> CfgNode:
-    """
-    Get a copy of the default config.
 
-    Returns:
-        a coach CfgNode instance.
-    """
-    from .defaults import _C
-
-    return _C.clone()
-
-def configurable(init_func: Callable = None, *, from_config: Callable[[Any], dict[str, Any]] = None) -> Callable:
+def configurable(init_func: Callable = None, *, from_config: Callable[[Any], Dict[str, Any]] = None) -> Callable:
     """
     A decorator of a function or a class `__init__` method,
     to make it configurable by a `CfgNode` object.
@@ -103,7 +107,7 @@ def configurable(init_func: Callable = None, *, from_config: Callable[[Any], dic
             It is always required.
     """
 
-    # Decorate a function
+    # Decorating a function
     if init_func is None:
         # Prevent common misuse: `@configurable()`.
         if from_config is None:
@@ -125,7 +129,7 @@ def configurable(init_func: Callable = None, *, from_config: Callable[[Any], dic
 
         return wrapper
 
-    # Decorate a class `__init__` method
+    # Decorating a class `__init__` method
     else:
         assert(
             inspect.isfunction(init_func) and from_config is None and init_func.__name__ == "__init__"

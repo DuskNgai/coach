@@ -1,0 +1,68 @@
+DATALOADER:
+  NUM_WORKERS: 4
+
+  IMAGE_BATCH_SIZE: 1
+  RAY_BATCH_SIZE: 4096
+
+  SAMPLER_TRAIN: TrainingSampler
+
+DATASETS:
+  TRAIN: 
+    NAMES: [MNISTDataset]
+    PARAMS: [
+      [train]
+    ]
+
+  TEST:
+    NAMES: [MNISTDataset]
+    PARAMS: [
+      [test]
+    ]
+
+MODEL:
+  DEVICE: cuda
+  NAME: AutoEncoder
+  WEIGHTS:
+
+  ENCODER:
+    NAME: build_encoder
+    N_LAYERS: 4
+    N_FEATURES: 256
+    N_LATENTS: 256
+
+  DECODER:
+    NAME: build_decoder
+    N_LAYERS: 4
+    N_FEATURES: 256
+    N_LATENTS: 256
+
+  CRITERION:
+    NAME: build_pytorch_criterion
+    TYPE: MSELoss
+
+SOLVER:
+  AMP:
+    ENABLED: True
+
+  LOG_PERIOD: 20
+  CHECKPOINT_PERIOD: 5000
+
+  BASE_LR: 1e-3
+  LR_SCHEDULER_NAME: MultiStepParamScheduler
+  STEPS: (100000, 150000)
+  MAX_ITER: 200000
+  GAMMA: 0.1
+
+  RESCALE_INTERVAL: False
+  WARMUP_FACTOR: 0.001
+  WARMUP_ITERS: 500
+  WARMUP_METHOD: linear
+
+  SCHEDULER: MultiStepParamScheduler
+
+TEST:
+  EVAL_PERIOD: 5000
+
+VERSION: 1
+
+OUTPUT_DIR: vae/output

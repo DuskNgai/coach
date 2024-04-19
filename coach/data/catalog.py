@@ -8,6 +8,7 @@ __all__ = [
     "DatasetCatalogSingleton"
 ]
 
+
 class DatasetCatalog(UserDict):
     """
     A global dictionary that stores information about the datasets and how to obtain them.

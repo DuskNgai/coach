@@ -1,15 +1,21 @@
 import logging
 import weakref
 
+from coach.engine.hooks import (
+    HookBase,
+    IterationTimer,
+    LRScheduler,
+    PeriodicCheckpointer,
+    PeriodicWriter
+)
 from coach.utils.events import EventStorage
 from coach.utils.logger import log_api_usage
 from coach.utils import comm
 
-from .hooks import *
-
 __all__ = [
     "TrainerBase",
 ]
+
 
 class TrainerBase(object):
     """
@@ -31,20 +37,20 @@ class TrainerBase(object):
         self.storage: EventStorage = None
         log_api_usage("trainer.{}".format(self.__class__.__name__))
 
-    def register_hooks(self, hooks: list[HookBase]) -> None:
+    def register_hooks(self, hooks_for_trainer: list[HookBase]) -> None:
         """
         Register hooks with the trainer.
         They are executed in the order of registration.
 
         Args:
-            hooks (list[HookBase]): list of hooks to be registered.
+            hooks_for_trainer (list[HookBase]): list of hooks to be registered.
         """
 
-        hooks = list(filter(None, hooks))
-        for h in hooks:
-            assert isinstance(h, hooks.HookBase)
+        hooks_for_trainer = list(filter(None, hooks_for_trainer))
+        for h in hooks_for_trainer:
+            assert isinstance(h, HookBase)
             h.trainer = weakref.proxy(self)
-        self._hooks.extend(hooks)
+        self._hooks.extend(hooks_for_trainer)
 
     def build_hooks(self) -> list[HookBase]:
         result = [

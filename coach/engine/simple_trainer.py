@@ -17,6 +17,7 @@ __all__ = [
     "SimpleTrainer"
 ]
 
+
 class SimpleTrainer(TrainerBase):
     """
     A simple trainer for the most common type of training loop.
@@ -60,8 +61,6 @@ class SimpleTrainer(TrainerBase):
         self.zero_grad_before_step = zero_grad_before_step
         self.async_write_metrics = async_write_metrics
         self.concurrency_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-
-        self.register_hooks(self.build_hooks())
 
     def step(self) -> None:
         assert self.model.training, "Model is not in training mode."

@@ -12,6 +12,7 @@ __all__ = [
     "PathHandler",
 ]
 
+
 PathManagerSingleton = PathManager()
 """A Coach project-specific path manager."""
 

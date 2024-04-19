@@ -11,6 +11,7 @@ __all__ = [
     "InferenceSampler"
 ]
 
+
 class TrainingSampler(Sampler):
     """
     In training, we only care about the "infinite stream" of training data.

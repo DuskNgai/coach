@@ -6,7 +6,9 @@ from fvcore.common.param_scheduler import (
 )
 import torch
 
-if torch.__version__ < "2.0.0":
+from coach.utils.env import TORCH_VERSION
+
+if TORCH_VERSION < (2, 0):
     from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 else:
     from torch.optim.lr_scheduler import LRScheduler
