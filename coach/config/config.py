@@ -6,21 +6,8 @@ from fvcore.common.config import CfgNode
 from omegaconf import DictConfig
 
 __all__ = [
-    "get_cfg",
     "configurable"
 ]
-
-
-def get_cfg() -> CfgNode:
-    """
-    Get a copy of the default config.
-
-    Returns:
-        a coach CfgNode instance.
-    """
-    from .defaults import _C
-
-    return _C.clone()
 
 
 def _called_with_cfg(*args, **kwargs) -> bool:

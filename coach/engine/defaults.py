@@ -299,6 +299,7 @@ class DefaultTrainer(TrainerBase):
     @classmethod
     def build_model(cls, cfg: CfgNode) -> torch.nn.Module:
         model = build_model(cfg)
+        model = torch.compile(model)
         logger = logging.getLogger(__name__)
         logger.info("Model:\n{}".format(model))
         return model

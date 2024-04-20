@@ -4,10 +4,10 @@ import os
 from pathlib import Path
 import sys
 
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(Path.cwd().as_posix())
 
 from coach.checkpoint import CoachCheckpointer
-from coach.config import CfgNode, get_cfg
+from coach.config import CfgNode
 from coach.engine import DefaultTrainer, default_argument_parser, default_setup, launch
 
 # Just put it here to make the import order correct.
@@ -17,8 +17,7 @@ def setup_cfg(args: argparse.Namespace) -> CfgNode:
     """
     Create configs from default settings, file, and command-line arguments.
     """
-    cfg = get_cfg()
-    cfg.merge_from_file(args.config_file)
+    cfg = CfgNode(CfgNode.load_yaml_with_base(args.config_file))
     cfg.merge_from_list(args.opts)
     cfg.freeze()
     default_setup(cfg, args)

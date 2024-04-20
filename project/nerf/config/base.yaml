@@ -4,69 +4,78 @@ DATALOADER:
   IMAGE_BATCH_SIZE: 1
   RAY_BATCH_SIZE: 4096
 
-  SAMPLER_TRAIN: TrainingSampler
+  SAMPLER_TRAIN:
 
 DATASETS:
-  TRAIN: 
-    NAMES: [BlenderDataset]
-    PARAMS: [
-      [/home/vrlab/share/nerf-dataset/nerf_synthetic/hotdog]
-    ]
+  TRAIN:
+    NAMES: []
+    PARAMS: []
 
   TEST:
     NAMES: []
-    PARAMS: [
-      []
-    ]
+    PARAMS: []
 
 MODEL:
   DEVICE: cuda
-  NAME: NeRF
+  NAME:
   WEIGHTS:
 
   SAMPLER:
-    NAME: build_bbox_sampler
+    NAME:
     PROJECTION: perspective
 
   SCENE:
-    NAME: build_vanilla_scene
+    NAME:
+    MLP_WIDTH: 256
+    MLP_DEPTH: 8
+    SKIP_CONNECTION: false
+
     POSITIONAL_ENCODER:
-      NAME: build_trigonometric_encoder
+      NAME:
       N_FREQUENCIES: 10
+
     DIRECTIONAL_ENCODER:
-      NAME: build_trigonometric_encoder
+      NAME:
       N_FREQUENCIES: 4
 
   RENDERER:
-    NAME: build_volume_renderer
+    NAME:
 
   CRITERION:
-    NAME: build_pytorch_criterion
-    TYPE: MSELoss
+    NAME:
+    TYPE:
 
 SOLVER:
   AMP:
-    ENABLED: False
+    ENABLED: false
 
   LOG_PERIOD: 20
   CHECKPOINT_PERIOD: 5000
 
-  BASE_LR: 1e-3
-  LR_SCHEDULER_NAME: MultiStepParamScheduler
-  STEPS: (100000, 150000)
-  MAX_ITER: 200000
+  CLIP_GRADIENTS:
+    ENABLED: false
+
+  BASE_LR: 0.001
+  BASE_LR_END: 0.5
+  MOMENTUM: 0.9
+  NESTEROV: false
+  WEIGHT_DECAY: 0.0
+  WEIGHT_DECAY_NORM: null
+
+  LR_SCHEDULER_NAME:
+  STEPS: []
+  MAX_ITER: 0
   GAMMA: 0.1
 
-  RESCALE_INTERVAL: False
+  RESCALE_INTERVAL: false
   WARMUP_FACTOR: 0.001
-  WARMUP_ITERS: 500
+  WARMUP_ITERS: 0
   WARMUP_METHOD: linear
-
-  SCHEDULER: MultiStepParamScheduler
 
 TEST:
   EVAL_PERIOD: 5000
 
+CUDNN_BENCHMARK: False
+SEED: -1
 VERSION: 1
-
-OUTPUT_DIR: project/nerf/output
+OUTPUT_DIR: null

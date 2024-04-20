@@ -5,6 +5,8 @@ import torch.nn as nn
 from coach.config import configurable, CfgNode
 from coach.modeling.architecture import MODEL_REGISTRY
 from coach.modeling.criterion import build_criterion, Criterion
+from project.vae.modeling.encoder import build_vae_encoder
+from project.vae.modeling.decoder import build_vae_decoder
 
 __all__ = ["AutoEncoder"]
 
@@ -33,8 +35,8 @@ class AutoEncoder(nn.Module):
 
     @classmethod
     def from_config(cls, cfg: CfgNode) -> dict[str, nn.Module]:
-        encoder = build_encoder(cfg)
-        decoder = build_decoder(cfg)
+        encoder = build_vae_encoder(cfg)
+        decoder = build_vae_decoder(cfg)
         criterion = build_criterion(cfg)
         return {
             "encoder": encoder,

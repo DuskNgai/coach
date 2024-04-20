@@ -254,7 +254,7 @@ def reduce_param_groups(params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 def build_scheduler(cfg: CfgNode, optimizer: Optimizer) -> LRScheduler:
     """Return a scheduler with a given configuration."""
 
-    name = cfg.SOLVER.SCHEDULER
+    name = cfg.SOLVER.LR_SCHEDULER_NAME
 
     if name == "MultiStepParamScheduler":
         steps = list(filter(lambda x: x <= cfg.SOLVER.MAX_ITER, cfg.SOLVER.STEPS))
