@@ -1,6 +1,5 @@
 from typing import List, Optional, Union
 
-import torch
 import torch.nn as nn
 
 from coach.config import CfgNode
@@ -19,10 +18,6 @@ class MlpDecoder(Mlp):
     ) -> None:
         super().__init__(in_channels, hidden_layers, hidden_channels, out_channels, bias, act_layer)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = super().forward(x)
-        x = torch.tanh(x)
-        return x
 
 @VAE_DECODER_REGISTRY.register()
 def build_ae_mlp_decoder(cfg: CfgNode) -> MlpDecoder:

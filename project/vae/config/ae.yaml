@@ -3,9 +3,10 @@ _BASE_: ../../../coach/config/base.yaml
 DATALOADER:
   NUM_WORKERS: 4
 
-  IMAGE_BATCH_SIZE: 128
+  IMAGE_BATCH_SIZE: 32
 
   SAMPLER_TRAIN: TrainingSampler
+  SAMPLER_TEST: InferenceSampler
 
 DATASETS:
   TRAIN: 
@@ -26,36 +27,36 @@ MODEL:
   WEIGHTS:
 
   IN_CHANNELS: 784
-  LATENT_CHANNELS: 10
+  LATENT_CHANNELS: 8
 
   ENCODER:
     NAME: build_ae_mlp_encoder
-    HIDDEN_LAYERS: 3
-    HIDDEN_CHANNELS: 512
+    HIDDEN_LAYERS: 4
+    HIDDEN_CHANNELS: [16, 128, 512]
     BIAS: True
 
   DECODER:
     NAME: build_ae_mlp_decoder
-    HIDDEN_LAYERS: 3
-    HIDDEN_CHANNELS: 512
+    HIDDEN_LAYERS: 4
+    HIDDEN_CHANNELS: [16, 128, 512]
     BIAS: True
 
   CRITERION:
     NAME: build_pytorch_criterion
-    TYPE: MSELoss
+    TYPE: BCEWithLogitsLoss
 
 SOLVER:
   AMP:
     ENABLED: True
 
-  LOG_PERIOD: 100
-  CHECKPOINT_PERIOD: 10000
+  LOG_PERIOD: 1000
+  CHECKPOINT_PERIOD: 20000
 
-  BASE_LR: 0.001
+  BASE_LR: 1
   LR_SCHEDULER_NAME: MultiStepParamScheduler
-  STEPS: [15000, 22500]
-  MAX_ITER: 25000
-  GAMMA: 0.1
+  STEPS: [37500, 56250, 84375]
+  MAX_ITER: 93750
+  GAMMA: 0.4
 
   RESCALE_INTERVAL: False
   WARMUP_FACTOR: 0.001
@@ -69,4 +70,4 @@ TEST:
 
 VERSION: 1
 
-OUTPUT_DIR: project/vae/output
+OUTPUT_DIR: project/vae/output/ae

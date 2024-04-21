@@ -6,6 +6,7 @@ DATALOADER:
   IMAGE_BATCH_SIZE: 128
 
   SAMPLER_TRAIN: TrainingSampler
+  SAMPLER_TEST: InferenceSampler
 
 DATASETS:
   TRAIN: 
@@ -26,35 +27,35 @@ MODEL:
   WEIGHTS:
 
   IN_CHANNELS: 784
-  LATENT_CHANNELS: 10
+  LATENT_CHANNELS: 8
 
   ENCODER:
     NAME: build_vae_mlp_encoder
-    HIDDEN_LAYERS: 3
-    HIDDEN_CHANNELS: 512
+    HIDDEN_LAYERS: 4
+    HIDDEN_CHANNELS: [16, 128, 512]
     BIAS: True
 
   DECODER:
     NAME: build_vae_mlp_decoder
-    HIDDEN_LAYERS: 3
-    HIDDEN_CHANNELS: 512
+    HIDDEN_LAYERS: 4
+    HIDDEN_CHANNELS: [16, 128, 512]
     BIAS: True
 
   CRITERION:
     NAME: build_vae_criterion
-    WEIGHT: 1.0
+    WEIGHT: 10.0
 
 SOLVER:
   AMP:
-    ENABLED: True
+    ENABLED: False
 
-  LOG_PERIOD: 100
-  CHECKPOINT_PERIOD: 10000
+  LOG_PERIOD: 1000
+  CHECKPOINT_PERIOD: 20000
 
   BASE_LR: 0.001
   LR_SCHEDULER_NAME: MultiStepParamScheduler
-  STEPS: [15000, 22500]
-  MAX_ITER: 25000
+  STEPS: [28130, 42185]
+  MAX_ITER: 46875
   GAMMA: 0.1
 
   RESCALE_INTERVAL: False
@@ -69,4 +70,4 @@ TEST:
 
 VERSION: 1
 
-OUTPUT_DIR: project/vae/output
+OUTPUT_DIR: project/vae/output/vae

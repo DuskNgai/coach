@@ -299,7 +299,7 @@ class CommonMetricPrinter(EventWriter):
                 ]),
                 time="avg time: {:.4f} (last: {:.4f})".format(avg_time, last_time) if avg_time is not None else "",
                 data_time="avg data time: {:.4f} (last: {:.4f})".format(avg_data_time, last_data_time) if avg_data_time is not None else "",
-                lr="{:.4e}".format(lr) if lr is not None else "N/A",
+                lr="lr: {:.4e}".format(lr) if lr is not None else "N/A",
                 memory="max memory: {:.4f} MB".format(max_memory) if max_memory is not None else "",
             )
         )

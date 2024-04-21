@@ -134,8 +134,7 @@ class SimpleTrainer(TrainerBase):
                     "Loss is {} at iteration {}, stopping training. Loss dict = {}".format(total_loss, iteration, total_metric_dict)
                 )
 
-            if len(total_metric_dict) > 1:
-                storage.put_scalars(curr_iter=iteration, **total_metric_dict)
+            storage.put_scalars(curr_iter=iteration, **total_metric_dict)
 
     def state_dict(self) -> dict:
         result = super().state_dict()

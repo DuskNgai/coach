@@ -1,6 +1,5 @@
 from typing import List, Optional, Union
 
-import torch
 import torch.nn as nn
 
 from coach.config import CfgNode
@@ -18,9 +17,6 @@ class MlpEncoder(Mlp):
         act_layer: nn.Module = nn.ReLU
     ) -> None:
         super().__init__(in_channels, hidden_layers, hidden_channels, out_channels, bias, act_layer)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return super().forward(x)
 
 
 @VAE_ENCODER_REGISTRY.register()

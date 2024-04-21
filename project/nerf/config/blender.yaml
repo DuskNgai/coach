@@ -6,6 +6,7 @@ DATALOADER:
   IMAGE_BATCH_SIZE: 1
 
   SAMPLER_TRAIN: TrainingSampler
+  SAMPLER_TEST: InferenceSampler
 
 DATASETS:
   TRAIN: 

@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import torch
 import torch.utils.data as torch_data
@@ -78,7 +78,7 @@ def _train_loader_from_config(cfg: CfgNode) -> dict[str, Any]:
 def build_coach_train_loader(
     dataset,
     *,
-    sampler: torch_data.Sampler | None = None,
+    sampler: Optional[torch_data.Sampler] = None,
     image_batch_size: int,
     num_workers: int = 0,
     **kwargs
@@ -87,6 +87,11 @@ def build_coach_train_loader(
     Build the train loader for Coach.
 
     Args:
+        dataset (torch_data.Dataset): The dataset to use.
+        sampler (torch_data.Sampler | None): The sampler to use.
+        image_batch_size (int): The image batch size.
+        num_workers (int): The number of workers to use.
+        kwargs: Other arguments to pass to the DataLoader.
     """
     if isinstance(dataset, torch_data.IterableDataset):
         assert sampler is None, "sampler must be None for IterableDataset."
@@ -107,13 +112,33 @@ def build_coach_train_loader(
     )
 
 def _test_loader_from_config(cfg: CfgNode) -> dict[str, Any]:
-    return {}
+    logger = logging.getLogger(__name__)
+
+    dataset = get_dataset(cfg.DATASETS.TEST.NAMES, cfg.DATASETS.TEST.PARAMS, is_train=False)
+
+    if isinstance(dataset, torch_data.IterableDataset):
+        logger.info("Using iterable dataset, sampler will be ignored.")
+        sampler = None
+    else:
+        sampler_name = cfg.DATALOADER.SAMPLER_TEST
+        logger.info("Using dataset with sampler {}.".format(sampler_name))
+        if sampler_name == "InferenceSampler":
+            sampler = InferenceSampler(len(dataset))
+        else:
+            raise KeyError("Unknown training sampler: {}".format(sampler_name))
+
+    return {
+        "dataset": dataset,
+        "sampler": sampler,
+        "image_batch_size": cfg.DATALOADER.IMAGE_BATCH_SIZE,
+        "num_workers": cfg.DATALOADER.NUM_WORKERS
+    }
 
 @configurable(from_config=_test_loader_from_config)
 def build_coach_test_loader(
     dataset,
     *,
-    sampler: torch_data.Sampler | None = None,
+    sampler: Optional[torch_data.Sampler] = None,
     image_batch_size: int = 1,
     num_workers: int = 0
 ) -> torch_data.DataLoader:

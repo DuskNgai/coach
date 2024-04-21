@@ -175,6 +175,7 @@ def default_setup(cfg: CfgNode, args: argparse.Namespace) -> None:
     # typical validation set.
     if not (hasattr(args, "eval_only") and args.eval_only):
         torch.backends.cudnn.benchmark = _try_get_key(cfg, "CUDNN_BENCHMARK", "train.cudnn_benchmark", default=False)
+    torch.set_float32_matmul_precision("high")
 
 def default_writers(output_dir: str, max_iter: int = None) -> list[EventWriter]:
     """

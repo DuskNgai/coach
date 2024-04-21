@@ -19,6 +19,10 @@ def build_pytorch_criterion(cfg: CfgNode) -> Criterion:
         criterion = nn.SmoothL1Loss()
     elif loss_type == "HuberLoss":
         criterion = nn.HuberLoss()
+    elif loss_type == "CrossEntropyLoss":
+        criterion = nn.CrossEntropyLoss()
+    elif loss_type == "BCEWithLogitsLoss":
+        criterion = nn.BCEWithLogitsLoss()
     else:
         raise KeyError("Unknown loss type: {}".format(loss_type))
 

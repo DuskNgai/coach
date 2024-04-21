@@ -11,10 +11,7 @@ class MNISTDataset(datasets.MNIST):
         super().__init__(
             root=root,
             train=is_train,
-            transform=transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.5,), (0.5,))
-            ]),
+            transform=transforms.ToTensor(),
             *args,
             **kwargs
         )

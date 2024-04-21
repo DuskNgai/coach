@@ -8,7 +8,7 @@
 conda create -n coach python=3.11
 conda activate coach
 conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia
-conda install ipykernel tensorboard
+conda install ipykernel matplotlib tensorboard
 pip install fvcore omegaconf
 ```
 

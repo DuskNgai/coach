@@ -56,11 +56,13 @@ class VariationalAutoEncoder(AutoEncoder):
             images (torch.Tensor): The input images.
         """
         images = images.to(self.device)
-        encoded = self.encoder(images.flatten(1))
+        images = images.flatten(1)
+        encoded = self.encoder(images)
         mu, logvar = torch.chunk(encoded, 2, dim=-1)
         latent = self.reparameterize(mu, logvar)
         outputs = self.decoder(latent)
-        losses = self.criterion(outputs.reshape_as(images), images, mu, logvar)
+        outputs = torch.sigmoid(outputs)
+        losses = self.criterion(images, outputs, mu, logvar)
         return losses
 
     def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
@@ -70,3 +72,9 @@ class VariationalAutoEncoder(AutoEncoder):
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std
+
+    @torch.no_grad()
+    def inference(self, latent: torch.Tensor) -> torch.Tensor:
+        outputs = self.decoder(latent)
+        outputs = torch.sigmoid(outputs)
+        return outputs
