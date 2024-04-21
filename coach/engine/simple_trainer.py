@@ -38,7 +38,7 @@ class SimpleTrainer(TrainerBase):
         `optimizer` (torch.optim.Optimizer): The optimizer.
         `gather_metrics_freq` (int): The frequency to gather metrics from all processes to the main process.
         `zero_grad_before_step` (bool): Whether to zero gradients before each step.
-        `async_write_metrics` (bool): Whether to write metrics asynchronously.
+        `async_write_metrics` (bool): Whether to write metrics asynchronously, which may accelerate training.
     """
 
     def __init__(self,
@@ -133,8 +133,6 @@ class SimpleTrainer(TrainerBase):
                 raise FloatingPointError(
                     "Loss is {} at iteration {}, stopping training. Loss dict = {}".format(total_loss, iteration, total_metric_dict)
                 )
-
-            storage.put_scalar("total_loss", total_loss, curr_iter=iteration)
 
             if len(total_metric_dict) > 1:
                 storage.put_scalars(curr_iter=iteration, **total_metric_dict)

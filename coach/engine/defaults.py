@@ -241,6 +241,10 @@ class DefaultTrainer(TrainerBase):
         optimizer = DefaultTrainer.build_optimizer(cfg, model)
         data_loader = DefaultTrainer.build_train_loader(cfg)
 
+        if comm.is_main_process():
+            logger.info("Model:\n{}".format(model))
+            logger.info("Number of trainable parameters: {}".format(sum(p.numel() for p in model.parameters() if p.requires_grad)))
+
         model = create_ddp_model(model, broadcast_buffers=False)
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(
             model, data_loader, optimizer

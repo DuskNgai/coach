@@ -163,14 +163,14 @@ def all_gather(data: T, group=None) -> list[T]:
     return buffer
 
 
-def gather(data: T, dst: int, group=None) -> list[T]:
+def gather(data: T, dst: int = 0, group=None) -> list[T]:
     """
     Run gather on arbitrary picklable data (not necessarily tensors).
     Gather means gather data from all processes to one process.
 
     Args:
         `data` (Any): Any picklable object.
-        `dst` (int): The rank of the destination process.
+        `dst` (int): The rank of the destination process, default to main process.
         `group` (dist.ProcessGroup): The process group to gather results from.
             By default, a group containing all ranks on gloo backend.
 

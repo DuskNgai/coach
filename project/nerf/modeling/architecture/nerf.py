@@ -1,5 +1,6 @@
 from typing import Any
 
+import torch
 import torch.nn as nn
 
 from coach.config import configurable, CfgNode
@@ -25,6 +26,7 @@ class NeRF(nn.Module):
     @configurable
     def __init__(
         self,
+        device: torch.device,
         sampler: Sampler,
         scene: Scene,
         renderer: Renderer,
@@ -32,6 +34,7 @@ class NeRF(nn.Module):
     ) -> None:
         super().__init__()
 
+        self.device = device
         self.sampler = sampler
         self.scene = scene
         self.renderer = renderer
@@ -44,6 +47,7 @@ class NeRF(nn.Module):
         renderer = build_renderer(cfg)
         criterion = build_criterion(cfg)
         return {
+            "device": torch.device(cfg.MODLE.DEVICE),
             "sampler": sampler,
             "scene": scene,
             "renderer": renderer,

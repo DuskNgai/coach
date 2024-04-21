@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 
 import torch
 import torch.nn as nn
@@ -9,11 +9,13 @@ from coach.modeling.criterion import build_criterion, Criterion
 from project.vae.modeling.encoder import build_vae_encoder
 from project.vae.modeling.decoder import build_vae_decoder
 
+from .ae import AutoEncoder
+
 __all__ = ["VariationalAutoEncoder"]
 
 
 @MODEL_REGISTRY.register()
-class VariationalAutoEncoder(nn.Module):
+class VariationalAutoEncoder(AutoEncoder):
     """
     A vanilla variational autoencoder. A model that contains the following components:
     1. Encoder: Encodes the input into a latent representation, which is sample from its mean and variance.
@@ -24,15 +26,17 @@ class VariationalAutoEncoder(nn.Module):
     @configurable
     def __init__(
         self,
+        device: torch.device,
         encoder: nn.Module,
         decoder: nn.Module,
         criterion: Criterion,
     ) -> None:
-        super().__init__()
-
-        self.encoder = encoder
-        self.decoder = decoder
-        self.criterion = criterion
+        super().__init__(
+            device=device,
+            encoder=encoder,
+            decoder=decoder,
+            criterion=criterion
+        )
 
     @classmethod
     def from_config(cls, cfg: CfgNode) -> dict[str, nn.Module]:
@@ -40,20 +44,23 @@ class VariationalAutoEncoder(nn.Module):
         decoder = build_vae_decoder(cfg)
         criterion = build_criterion(cfg)
         return {
+            "device": torch.device(cfg.MODEL.DEVICE),
             "encoder": encoder,
             "decoder": decoder,
             "criterion": criterion
         }
-    
-    def forward(self, batched_inputs: dict[str, Any]) -> dict[str, Any]:
+
+    def forward(self, images: torch.Tensor) -> Dict[str, Any]:
         """
         Args:
-            batched_inputs (dict[str, Any]): A batch of inputs.
+            images (torch.Tensor): The input images.
         """
-        mu, logvar = self.encoder(batched_inputs)
+        images = images.to(self.device)
+        encoded = self.encoder(images.flatten(1))
+        mu, logvar = torch.chunk(encoded, 2, dim=-1)
         latent = self.reparameterize(mu, logvar)
         outputs = self.decoder(latent)
-        losses = self.criterion(outputs, inputs)
+        losses = self.criterion(outputs.reshape_as(images), images, mu, logvar)
         return losses
 
     def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:

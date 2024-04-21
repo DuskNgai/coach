@@ -22,18 +22,19 @@ class Mlp(nn.Module):
         hidden_channels = hidden_channels or in_channels
         out_channels = out_channels or hidden_channels
 
-        self.layers = nn.ModuleList()
+        layers = []
         if hidden_layers == 0:
-            self.layers.append(nn.Linear(in_channels, out_channels, bias=bias))
+            layers.append(nn.Linear(in_channels, out_channels, bias=bias))
         else:
-            self.layers.append(nn.Linear(in_channels, hidden_channels, bias=bias))
-            self.layers.append(act_layer())
+            layers.append(nn.Linear(in_channels, hidden_channels, bias=bias))
+            layers.append(act_layer())
             for _ in range(hidden_layers - 1):
-                self.layers.append(nn.Linear(hidden_channels, hidden_channels, bias=bias))
-                self.layers.append(act_layer())
-            self.layers.append(nn.Linear(hidden_channels, out_channels, bias=bias))
+                layers.append(nn.Linear(hidden_channels, hidden_channels, bias=bias))
+                layers.append(act_layer())
+            layers.append(nn.Linear(hidden_channels, out_channels, bias=bias))
+
+        self.layers = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        for layer in self.layers:
-            x = layer(x)
+        x = self.layers(x)
         return x

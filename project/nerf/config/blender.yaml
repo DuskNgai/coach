@@ -1,10 +1,9 @@
-_BASE_: base.yaml
+_BASE_: ../../../coach/config/base.yaml
 
 DATALOADER:
   NUM_WORKERS: 4
 
   IMAGE_BATCH_SIZE: 1
-  RAY_BATCH_SIZE: 4096
 
   SAMPLER_TRAIN: TrainingSampler
 
@@ -28,6 +27,7 @@ MODEL:
   SAMPLER:
     NAME: build_bbox_sampler
     PROJECTION: perspective
+    RAY_BATCH_SIZE: 4096
 
   SCENE:
     NAME: build_vanilla_scene

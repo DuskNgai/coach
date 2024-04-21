@@ -18,6 +18,5 @@ def build_renderer(cfg: CfgNode) -> Renderer:
     """
     renderer_name = cfg.MODEL.RENDERER.NAME
     renderer = NERF_RENDERER_REGISTRY.get(renderer_name)(cfg)
-    renderer.to(torch.device(cfg.MODEL.DEVICE))
     log_api_usage("nerf.modeling.renderer.{}".format(renderer_name))
     return renderer

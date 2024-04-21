@@ -22,7 +22,7 @@ class VanillaScene(Scene):
         mlp_width: int = 256,
         mlp_depth: int = 8,
         skip_connection: bool = True
-    ):
+    ) -> None:
         super().__init__()
         act_layer = nn.ReLU
 
@@ -104,14 +104,13 @@ class VanillaScene(Scene):
 
 @NERF_SCENE_REGISTRY.register()
 def build_vanilla_scene(cfg: CfgNode) -> VanillaScene:
-    """Build the vanilla scene defined by `cfg.MODEL.SCENE.NAME`.
-    It does not load checkpoints from `cfg`.
     """
-    scene = VanillaScene(
+    Build the vanilla scene defined by `cfg.MODEL.SCENE`.
+    """
+    return VanillaScene(
         positional_encoder=build_positional_encoder(cfg),
         directional_encoder=build_directional_encoder(cfg),
         mlp_width=cfg.MODEL.SCENE.MLP_WIDTH,
         mlp_depth=cfg.MODEL.SCENE.MLP_DEPTH,
         skip_connection=cfg.MODEL.SCENE.SKIP_CONNECTION
     )
-    return scene

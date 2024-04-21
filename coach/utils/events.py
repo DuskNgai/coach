@@ -226,7 +226,7 @@ class CommonMetricPrinter(EventWriter):
         `window_size` (int): the window size to smooth scalars.
     """
     def __init__(self, max_iter: int = None, window_size: int = 20):
-        self.logger = logging.getLogger("coach.utils.events")
+        self.logger = logging.getLogger("Coach")
         self._max_iter = max_iter
         self._window_size = window_size
         self._last_write_time = None
@@ -295,7 +295,7 @@ class CommonMetricPrinter(EventWriter):
                 ]),
                 metrics="  ".join([
                     "{}: {:.4f}".format(name, value.median(storage.count_samples(name, self._window_size)))
-                    for name, value in storage.histories().items() if "metric" not in name
+                    for name, value in storage.histories().items() if "metric" in name
                 ]),
                 time="avg time: {:.4f} (last: {:.4f})".format(avg_time, last_time) if avg_time is not None else "",
                 data_time="avg data time: {:.4f} (last: {:.4f})".format(avg_data_time, last_data_time) if avg_data_time is not None else "",

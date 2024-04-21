@@ -71,7 +71,6 @@ def _train_loader_from_config(cfg: CfgNode) -> dict[str, Any]:
         "dataset": dataset,
         "sampler": sampler,
         "image_batch_size": cfg.DATALOADER.IMAGE_BATCH_SIZE,
-        "ray_batch_size": cfg.DATALOADER.RAY_BATCH_SIZE,
         "num_workers": cfg.DATALOADER.NUM_WORKERS
     }
 
@@ -81,7 +80,6 @@ def build_coach_train_loader(
     *,
     sampler: torch_data.Sampler | None = None,
     image_batch_size: int,
-    ray_batch_size: int,
     num_workers: int = 0,
     **kwargs
 ) -> torch_data.DataLoader:
@@ -95,18 +93,15 @@ def build_coach_train_loader(
 
     world_size = get_world_size()
     total_image_batch_size = image_batch_size * world_size
-    total_ray_batch_size = ray_batch_size * world_size
     logger = logging.getLogger(__name__)
-    logger.info("Building train loader with image batch size {} and ray batch size {}.".format(
-        total_image_batch_size, total_ray_batch_size
-    ))
+    logger.info("Building train loader with image batch size {}.".format(total_image_batch_size))
 
     return torch_data.DataLoader(
         dataset,
         batch_size=total_image_batch_size,
         sampler=sampler,
         num_workers=num_workers,
-        collate_fn=collate_fn,
+        collate_fn=dataset.collate_fn,
         worker_init_fn=worker_init_reset_seed,
         **kwargs
     )
@@ -127,14 +122,8 @@ def build_coach_test_loader(
         batch_size=image_batch_size,
         sampler=sampler,
         num_workers=num_workers,
-        collate_fn=collate_fn
+        collate_fn=dataset.collate_fn,
     )
-
-def collate_fn(batch: Any) -> Any:
-    """
-    Collate function for the train loader.
-    """
-    return batch
 
 def worker_init_reset_seed(worker_id: int):
     initial_seed = torch.initial_seed() % 2 ** 31

@@ -11,7 +11,7 @@ import tqdm
 
 class BlenderDataset(data.Dataset):
     def __init__(self, root_dir: str, split: str = "train", is_train: bool = True):
-        super(BlenderDataset, self).__init__()
+        super().__init__()
 
         self.is_train = is_train
 
@@ -68,3 +68,7 @@ class BlenderDataset(data.Dataset):
             "pose": self.poses[index],
             "intrinsic": self.intrinsic,
         }
+
+    @property                                           
+    def collate_fn(self):                             
+        return None

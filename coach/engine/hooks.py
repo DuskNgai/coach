@@ -139,7 +139,7 @@ class IterationTimer(HookBase):
 
     def after_step(self):
         # +1 because we're in after_step, the current step is done but not yet counted
-        iter_done = self.trainer.storage.iter - self.trainer.start_iter + 1
+        iter_done = self.trainer.storage.iteration - self.trainer.start_iter + 1
         if iter_done >= self._warmup_iter:
             # Read the timer
             sec = self._step_timer.seconds()
@@ -205,7 +205,7 @@ class LRScheduler(HookBase):
                 self.optimizer,
                 self.scheduler,
                 self.trainer.max_iter,
-                last_iter=self.trainer.iter - 1,
+                last_iter=self.trainer.iteration - 1,
             )
         self._best_param_group_id = LRScheduler.get_best_param_group_id(self.optimizer)
 
@@ -239,7 +239,7 @@ class PeriodicCheckpointer(_PeriodicCheckpointer, HookBase):
         self.max_iter = self.trainer.max_iter
 
     def after_step(self):
-        self.step(self.trainer.iter)
+        self.step(self.trainer.iteration)
 
 class PeriodicWriter(HookBase):
     """
@@ -253,7 +253,7 @@ class PeriodicWriter(HookBase):
         self._period = period
 
     def after_step(self):
-        iter = self.trainer.iter + 1
+        iter = self.trainer.iteration + 1
         if iter % self._period == 0 or iter == self.trainer.max_iter:
             for writer in self._writers:
                 writer.write()

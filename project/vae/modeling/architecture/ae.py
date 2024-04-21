@@ -1,5 +1,6 @@
-from typing import Any
+from typing import Any, Dict
 
+import torch
 import torch.nn as nn
 
 from coach.config import configurable, CfgNode
@@ -23,12 +24,14 @@ class AutoEncoder(nn.Module):
     @configurable
     def __init__(
         self,
+        device: torch.device,
         encoder: nn.Module,
         decoder: nn.Module,
         criterion: Criterion,
     ) -> None:
         super().__init__()
 
+        self.device = device
         self.encoder = encoder
         self.decoder = decoder
         self.criterion = criterion
@@ -39,17 +42,19 @@ class AutoEncoder(nn.Module):
         decoder = build_vae_decoder(cfg)
         criterion = build_criterion(cfg)
         return {
+            "device": torch.device(cfg.MODEL.DEVICE),
             "encoder": encoder,
             "decoder": decoder,
             "criterion": criterion
         }
-    
-    def forward(self, batched_inputs: dict[str, Any]) -> dict[str, Any]:
+
+    def forward(self, images: torch.Tensor) -> Dict[str, Any]:
         """
         Args:
-            batched_inputs (dict[str, Any]): A batch of inputs.
+            images (torch.Tensor): The input images.
         """
-        latent = self.encoder(batched_inputs)
+        images = images.to(self.device)
+        latent = self.encoder(images.flatten(1))
         outputs = self.decoder(latent)
-        losses = self.criterion(outputs, inputs)
-        return losses
+        losses = self.criterion(outputs.reshape_as(images), images)
+        return {"loss": losses}

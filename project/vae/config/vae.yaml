@@ -22,27 +22,27 @@ DATASETS:
 
 MODEL:
   DEVICE: cuda
-  NAME: AutoEncoder
+  NAME: VariationalAutoEncoder
   WEIGHTS:
 
   IN_CHANNELS: 784
   LATENT_CHANNELS: 10
 
   ENCODER:
-    NAME: build_ae_mlp_encoder
+    NAME: build_vae_mlp_encoder
     HIDDEN_LAYERS: 3
     HIDDEN_CHANNELS: 512
     BIAS: True
 
   DECODER:
-    NAME: build_ae_mlp_decoder
+    NAME: build_vae_mlp_decoder
     HIDDEN_LAYERS: 3
     HIDDEN_CHANNELS: 512
     BIAS: True
 
   CRITERION:
-    NAME: build_pytorch_criterion
-    TYPE: MSELoss
+    NAME: build_vae_criterion
+    WEIGHT: 1.0
 
 SOLVER:
   AMP:
