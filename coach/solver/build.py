@@ -125,16 +125,29 @@ def build_optimizer(cfg: CfgNode, model: nn.Module) -> Optimizer:
         base_lr=cfg.SOLVER.BASE_LR,
         weight_decay_norm=cfg.SOLVER.WEIGHT_DECAY_NORM,
     )
-    sgd_args = {
-        "params": params,
-        "lr": cfg.SOLVER.BASE_LR,
-        "momentum": cfg.SOLVER.MOMENTUM,
-        "nesterov": cfg.SOLVER.NESTEROV,
-        "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
-    }
-    if TORCH_VERSION >= (1, 12):
-        sgd_args["foreach"] = True
-    return maybe_add_gradient_clipping(cfg, torch.optim.SGD(**sgd_args))
+
+    if cfg.SOLVER.NAME.lower() == "sgd":
+        sgd_args = {
+            "params": params,
+            "lr": cfg.SOLVER.BASE_LR,
+            "momentum": cfg.SOLVER.MOMENTUM,
+            "nesterov": cfg.SOLVER.NESTEROV,
+            "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
+        }
+        if TORCH_VERSION >= (1, 12):
+            sgd_args["foreach"] = True
+        return maybe_add_gradient_clipping(cfg, torch.optim.SGD(**sgd_args))
+    elif cfg.SOLVER.NAME.lower() == "adam":
+        adam_args = {
+            "params": params,
+            "lr": cfg.SOLVER.BASE_LR,
+            "betas": cfg.SOLVER.BETA,
+            "eps": cfg.SOLVER.EPS,
+            "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
+        }
+        if TORCH_VERSION >= (1, 12):
+            adam_args["foreach"] = True
+        return maybe_add_gradient_clipping(cfg, torch.optim.Adam(**adam_args))
 
 def get_default_optimizer_params(
     model: torch.nn.Module,

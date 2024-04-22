@@ -5,6 +5,15 @@ from coach.config import CfgNode
 from .build import CRITERION_REGISTRY
 from .criterion import Criterion
 
+class Builtin(Criterion):
+    def __init__(self, criterion: nn.Module) -> None:
+        super().__init__()
+        self.criterion = criterion
+
+    def forward(self, output, target):
+        return self.criterion(output, target)
+
+
 @CRITERION_REGISTRY.register()
 def build_pytorch_criterion(cfg: CfgNode) -> Criterion:
     """
@@ -26,4 +35,4 @@ def build_pytorch_criterion(cfg: CfgNode) -> Criterion:
     else:
         raise KeyError("Unknown loss type: {}".format(loss_type))
 
-    return criterion
+    return Builtin(criterion)

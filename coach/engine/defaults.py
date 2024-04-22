@@ -128,7 +128,7 @@ Run on multiple machines:
 
     return parser
 
-def default_setup(cfg: CfgNode, args: argparse.Namespace) -> None:
+def default_setup(cfg: CfgNode, args: argparse.Namespace, train: bool = True) -> None:
     """
     Perform some basic common setups at the beginning of a job, including:
     - Setting up logger
@@ -151,7 +151,7 @@ def default_setup(cfg: CfgNode, args: argparse.Namespace) -> None:
     logger.info("Environment info:\n" + collect_env_info())
     logger.info("Command line arguments: " + str(args))
 
-    if hasattr(args, "config_file") and args.config_file != "":
+    if hasattr(args, "config_file") and args.config_file != "" and train:
         logger.info(
             "Contents of args.config_file={}:\n{}".format(
                 args.config_file,
@@ -159,7 +159,7 @@ def default_setup(cfg: CfgNode, args: argparse.Namespace) -> None:
             )
         )
 
-    if comm.is_main_process() and output_dir is not None:
+    if comm.is_main_process() and output_dir is not None and train:
         path = os.path.join(output_dir, "config.yaml")
         if isinstance(cfg, CfgNode):
             logger.info("Running with full config:\n{}".format(_highlight(cfg.dump(), ".yaml")))
@@ -245,6 +245,7 @@ class DefaultTrainer(TrainerBase):
         if comm.is_main_process():
             logger.info("Model:\n{}".format(model))
             logger.info("Number of trainable parameters: {}".format(sum(p.numel() for p in model.parameters() if p.requires_grad)))
+            logger.info("Optimizer:\n{}".format(optimizer))
 
         model = create_ddp_model(model, broadcast_buffers=False)
         self._trainer = (AMPTrainer if cfg.SOLVER.AMP.ENABLED else SimpleTrainer)(
@@ -273,7 +274,7 @@ class DefaultTrainer(TrainerBase):
     def test(self) -> None:
         raise NotImplementedError()
 
-    def step(self):
+    def step(self) -> None:
         self._trainer.iteration = self.iteration
         self._trainer.step()
 
@@ -282,7 +283,7 @@ class DefaultTrainer(TrainerBase):
         result["_trainer"] = self._trainer.state_dict()
         return result
 
-    def load_state_dict(self, state_dict: dict):
+    def load_state_dict(self, state_dict: dict) -> None:
         super().load_state_dict(state_dict)
         self._trainer.load_state_dict(state_dict["_trainer"])
 
@@ -290,15 +291,15 @@ class DefaultTrainer(TrainerBase):
         return default_writers(self.cfg.OUTPUT_DIR, self.max_iter)
 
     @property
-    def model(self):
+    def model(self) -> torch.nn.Module:
         return self._trainer.model
     
     @property
-    def optimizer(self):
+    def optimizer(self) -> torch.optim.Optimizer:
         return self._trainer.optimizer
     
     @property
-    def data_loader(self):
+    def data_loader(self) -> torch_data.DataLoader:
         return self._trainer.data_loader
 
     @classmethod

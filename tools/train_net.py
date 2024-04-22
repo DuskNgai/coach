@@ -20,7 +20,7 @@ def setup_cfg(args: argparse.Namespace) -> CfgNode:
     cfg = CfgNode(CfgNode.load_yaml_with_base(args.config_file))
     cfg.merge_from_list(args.opts)
     cfg.freeze()
-    default_setup(cfg, args)
+    default_setup(cfg, args, train=True)
     return cfg
 
 def main(args: argparse.ArgumentParser):

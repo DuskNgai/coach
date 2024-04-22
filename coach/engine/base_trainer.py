@@ -90,9 +90,9 @@ class TrainerBase(object):
                     self.after_step()
                 # See `is_loop_completed`
                 self.iteration += 1
-            except Exception:
+            except Exception as e:
                 logger.exception("Exception during training:")
-                raise
+                raise Exception from e
             finally:
                 self.after_train()
 

@@ -3,6 +3,7 @@ import functools
 import logging
 import os
 import sys
+from typing import IO, Optional, Union
 
 from termcolor import colored
 import torch
@@ -15,16 +16,16 @@ __all__ = [
 
 
 class _ColoredFormatter(logging.Formatter):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self._root_name = kwargs.pop("root_name") + "."
         self._abbrev_name = kwargs.pop("abbrev_name", "")
         if self._abbrev_name != "":
             self._abbrev_name += "."
         super().__init__(*args, **kwargs)
 
-    def formatMessage(self, record):
+    def formatMessage(self, record: logging.LogRecord) -> str:
         record.name = record.name.replace(self._root_name, self._abbrev_name)
-        log  = super().formatMessage(record)
+        log = super().formatMessage(record)
         if record.levelno == logging.WARNING:
             prefix = colored("WARNING", "red", attrs=["blink"])
         elif record.levelno == logging.ERROR or record.levelno == logging.CRITICAL:
@@ -35,12 +36,12 @@ class _ColoredFormatter(logging.Formatter):
 
 @functools.lru_cache()
 def setup_logger(
-    output = None,
-    distributed_rank = 0,
+    output: Optional[str] = None,
+    distributed_rank: int = 0,
     *,
     color: bool = True,
     name: str = "Coach",
-    abbrev_name: str = None,
+    abbrev_name: Optional[str] = None,
     enable_propagation: bool = False,
     configure_stdout: bool = True,
 ) -> logging.Logger:
@@ -99,7 +100,7 @@ def setup_logger(
     return logger
 
 @functools.lru_cache(maxsize=None)
-def _cached_log_stream(filename: str):
+def _cached_log_stream(filename: str) -> Union[IO[bytes], IO[str]]:
     """
     Cache the opened file object, so that different calls to `setup_logger`
     with the same filename will write to the same file object.

@@ -54,7 +54,6 @@ class AutoEncoder(nn.Module):
             images (torch.Tensor): The input images.
         """
         images = images.to(self.device)
-        images = images.flatten(1)
         latent = self.encoder(images)
         outputs = self.decoder(latent)
         losses = self.criterion(outputs, images)
@@ -67,7 +66,7 @@ class AutoEncoder(nn.Module):
             images (torch.Tensor): The input images.
         """
         images = images.to(self.device)
-        latent = self.encoder(images.flatten(1))
+        latent = self.encoder(images)
         outputs = self.decoder(latent)
-        outputs = torch.sigmoid(outputs)
-        return outputs.reshape_as(images)
+        outputs = self.criterion.inference(outputs)
+        return outputs
