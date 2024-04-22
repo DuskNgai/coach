@@ -126,7 +126,8 @@ def build_optimizer(cfg: CfgNode, model: nn.Module) -> Optimizer:
         weight_decay_norm=cfg.SOLVER.WEIGHT_DECAY_NORM,
     )
 
-    if cfg.SOLVER.NAME.lower() == "sgd":
+    optimizer_name = cfg.SOLVER.OPTIMIZER_NAME.lower()
+    if optimizer_name == "sgd":
         sgd_args = {
             "params": params,
             "lr": cfg.SOLVER.BASE_LR,
@@ -137,7 +138,7 @@ def build_optimizer(cfg: CfgNode, model: nn.Module) -> Optimizer:
         if TORCH_VERSION >= (1, 12):
             sgd_args["foreach"] = True
         return maybe_add_gradient_clipping(cfg, torch.optim.SGD(**sgd_args))
-    elif cfg.SOLVER.NAME.lower() == "adam":
+    elif optimizer_name == "adam":
         adam_args = {
             "params": params,
             "lr": cfg.SOLVER.BASE_LR,

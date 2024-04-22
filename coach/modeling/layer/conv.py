@@ -38,14 +38,10 @@ class ConvNet(nn.Module):
         else:
             layers.append(nn.Conv2d(in_channels, hidden_channels[0], kernel_size, stride, padding, bias=bias))
             layers.append(act_layer())
-            layers.append(nn.Conv2d(hidden_channels[0], hidden_channels[0], kernel_size, 2, padding, bias=bias))
-            layers.append(act_layer())
             for i in range(1, hidden_layers - 1):
-                layers.append(nn.Conv2d(hidden_channels[i - 1], hidden_channels[i], kernel_size, stride, padding, bias=bias))
+                layers.append(nn.Conv2d(hidden_channels[i - 1], hidden_channels[i], kernel_size, 2, padding, bias=bias))
                 layers.append(act_layer())
-                layers.append(nn.Conv2d(hidden_channels[i], hidden_channels[i], kernel_size, 2, padding, bias=bias))
-                layers.append(act_layer())
-            layers.append(nn.Conv2d(hidden_channels[-1], out_channels, kernel_size, stride, padding, bias=bias))
+            layers.append(nn.Conv2d(hidden_channels[-1], out_channels, kernel_size, 2, padding, bias=bias))
 
         self.layers = nn.Sequential(*layers)
 
