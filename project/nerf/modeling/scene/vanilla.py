@@ -25,26 +25,35 @@ class VanillaScene(Scene):
     ) -> None:
         super().__init__()
         act_layer = nn.ReLU
+        self.skip_connection = skip_connection
 
         self.positional_encoder = positional_encoder
         self.directional_encoder = directional_encoder
         self.act_layer = act_layer()
 
-        #* Stage 1 of NeRF MLP.
-        self.stage1 = Mlp(
-            in_channels=self.positional_encoder.out_channels,
-            hidden_layers=5 - 1,
-            hidden_channels=mlp_width,
-            act_layer=act_layer,
-        )
+        if skip_connection:
+            #* Stage 1 of NeRF MLP.
+            self.stage1 = Mlp(
+                in_channels=self.positional_encoder.out_channels,
+                hidden_layers=5 - 1,
+                hidden_channels=mlp_width,
+                act_layer=act_layer,
+            )
 
-        #* Stage 2 of NeRF MLP, starting from a skip connection.
-        self.stage2 = Mlp(
-            in_channels=self.positional_encoder.out_channels + mlp_width,
-            hidden_layers=mlp_depth - 2 - (5 - 1),
-            hidden_channels=mlp_width,
-            act_layer=act_layer,
-        )
+            #* Stage 2 of NeRF MLP, starting from a skip connection.
+            self.stage2 = Mlp(
+                in_channels=self.positional_encoder.out_channels + mlp_width,
+                hidden_layers=mlp_depth - 2 - (5 - 1),
+                hidden_channels=mlp_width,
+                act_layer=act_layer,
+            )
+        else:
+            self.stage = Mlp(
+                in_channels=self.positional_encoder.out_channels,
+                hidden_layers=mlp_depth - 1,
+                hidden_channels=mlp_width,
+                act_layer=act_layer,
+            )
 
         #* Network for predicting density.
         self.density_net = Mlp(
@@ -86,13 +95,16 @@ class VanillaScene(Scene):
         encoded_pos = self.pos_encoder(xyzs)
         encoded_dir = self.dir_encoder(dirs)
 
-        feature_1 = self.act_layer(self.stage1(encoded_pos))
-        feature_2 = self.act_layer(self.stage2(torch.cat([encoded_pos, feature_1], dim=-1)))
+        if self.skip_connection:
+            network_feature = self.act_layer(self.stage1(encoded_pos))
+            feature = self.act_layer(self.stage2(torch.cat([encoded_pos, network_feature], dim=-1)))
+        else:
+            feature = self.act_layer(self.stage(encoded_pos))
 
-        densities = torch.exp(self.density_net(feature_2))
+        densities = torch.exp(self.density_net(feature))
 
-        feature_3 = self.act_layer(self.feature_net(feature_2))
-        colors = torch.sigmoid(self.rgb_net(torch.cat([encoded_dir, feature_3], dim=-1)))
+        color_feature = self.act_layer(self.feature_net(feature))
+        colors = torch.sigmoid(self.rgb_net(torch.cat([encoded_dir, color_feature], dim=-1)))
 
         attributes = {
             "xyz": xyzs,
