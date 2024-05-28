@@ -13,6 +13,7 @@ if TORCH_VERSION < (2, 0):
 else:
     from torch.optim.lr_scheduler import LRScheduler
 
+
 class WarmupParamScheduler(CompositeParamScheduler):
     """
     Warmup a scheduler at the beginning of training.
@@ -48,6 +49,7 @@ class WarmupParamScheduler(CompositeParamScheduler):
             interval_scaling=["rescaled", "rescaled" if rescale_interval else "fixed"],
             lengths=[warmup_length, 1 - warmup_length],
         )
+
 
 class LRMultiplier(LRScheduler):
     """

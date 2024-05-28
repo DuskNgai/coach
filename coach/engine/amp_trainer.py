@@ -9,6 +9,7 @@ from coach.utils.events import get_event_storage
 
 from .simple_trainer import SimpleTrainer
 
+
 __all__ = [
     "AMPTrainer"
 ]

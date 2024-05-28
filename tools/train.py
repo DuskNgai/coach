@@ -1,7 +1,7 @@
 import argparse
-import random
 import os
 from pathlib import Path
+import subprocess
 import sys
 
 sys.path.append(Path.cwd().as_posix())
@@ -13,6 +13,7 @@ from coach.engine import DefaultTrainer, default_argument_parser, default_setup,
 # Just put it here to make the import order correct.
 import project
 
+
 def setup_cfg(args: argparse.Namespace) -> CfgNode:
     """
     Create configs from default settings, file, and command-line arguments.
@@ -23,7 +24,8 @@ def setup_cfg(args: argparse.Namespace) -> CfgNode:
     default_setup(cfg, args, train=True)
     return cfg
 
-def main(args: argparse.ArgumentParser):
+
+def main(args: argparse.ArgumentParser) -> None:
     cfg = setup_cfg(args)
 
     if args.eval_only:
@@ -37,24 +39,22 @@ def main(args: argparse.ArgumentParser):
 
     trainer = DefaultTrainer(cfg)
     trainer.resume_or_load(resume=args.resume)
-    return trainer.train()
+    trainer.train()
+
 
 if __name__ == "__main__":
     parser = default_argument_parser()
     args = parser.parse_args()
 
     # Set the url of the distributed backend to the node
-    if args.num_machines == 1:
-        args.dist_url = "tcp://127.0.0.1:{}".format(random.randint(11111, 60000))
-    else:
+    if args.num_machines > 1:
         if args.dist_url == "host":
             args.dist_url = "tcp://{}:12345".format(os.environ["SLURM_JOB_NODELIST"])
         elif not args.dist_url.startswith("tcp"):
-            tmp = os.popen(
-                "echo $(scontrol show job {} | grep BatchHost)".format(
-                    args.dist_url
-                )
-            ).read()
+            tmp = subprocess.check_output(
+                "echo $(scontrol show job {} | grep BatchHost)".format(args.dist_url),
+                shell=True
+            ).decode("utf-8")
             tmp = tmp[tmp.find("=") + 1: -1]
             args.dist_url = "tcp://{}:12345".format(tmp)
     print("Command Line Args:", args)

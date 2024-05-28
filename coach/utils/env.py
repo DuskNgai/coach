@@ -17,7 +17,8 @@ TORCH_VERSION = tuple(int(x) for x in torch.__version__.split(".")[:2])
 PyTorch version as a tuple of 2 ints. Useful for comparison.
 """
 
-def seed_all_rng(seed: int = None) -> None:
+
+def seed_all_rng(seed: int | None = None) -> None:
     """
     Seed all the random number generators in random, numpy and torch.
 
@@ -29,10 +30,12 @@ def seed_all_rng(seed: int = None) -> None:
         logger = logging.getLogger(__name__)
         logger.info("Using a generated random seed {}".format(seed))
 
+    os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+
 
 def _configure_libraries() -> None:
     """
@@ -54,7 +57,8 @@ def _configure_libraries() -> None:
             # OpenCV is not installed.
             pass
 
-def _import_file(module_name: str, file_name: str, make_importable: bool) -> type(sys):
+
+def _import_file(module_name: str, file_name: str, make_importable: bool = False) -> importlib.ModuleType:
     """
     Import a Python file as a module from a file path.
 
@@ -73,6 +77,7 @@ def _import_file(module_name: str, file_name: str, make_importable: bool) -> typ
         sys.modules[module_name] = module
     return module
 
+
 def setup_env_module(env_module_path: str) -> None:
     """
     Load a custom environment module from a Python file or a module.
@@ -82,7 +87,7 @@ def setup_env_module(env_module_path: str) -> None:
         `env_module_path` (str): The path to the custom environment module.
     """
     if env_module_path.endswith(".py"):
-        env_module_path = _import_file("detectron2.utils.env.custom_module", env_module_path)
+        env_module_path = _import_file("coach.utils.env.custom_module", env_module_path)
     else:
         module = importlib.import_module(env_module_path)
     assert hasattr(module, "setup_environment") and callable(module.setup_environment), (
@@ -90,11 +95,13 @@ def setup_env_module(env_module_path: str) -> None:
     ).format(env_module_path)
     module.setup_environment()
 
+
 _ENV_SETUP_DONE = False
+
 
 def setup_environment() -> None:
     """
-    Setup the environment. If the environment variable `COACH_ENV_MODULE` is set,
+    Setup the environment for `coach`. If the environment variable `COACH_ENV_MODULE` is set,
     a Python file or a module will be loaded. Its `setup_environment()` will be called.
     """
     global _ENV_SETUP_DONE

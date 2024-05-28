@@ -19,7 +19,7 @@ MODEL:
 
   CRITERION:
     NAME: build_vae_criterion
-    WEIGHT: 5.0
+    WEIGHT: 10.0
 
 SOLVER:
   AMP:
@@ -30,9 +30,9 @@ SOLVER:
 
   BASE_LR: 0.001
   LR_SCHEDULER_NAME: MultiStepParamScheduler
-  STEPS: [37500, 56250, 84375]
-  MAX_ITER: 93750
-  GAMMA: 0.4
+  STEPS: [28130, 42185]
+  MAX_ITER: 46875
+  GAMMA: 0.1
 
   RESCALE_INTERVAL: False
   WARMUP_FACTOR: 0.001

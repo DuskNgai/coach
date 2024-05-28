@@ -7,6 +7,7 @@ from iopath.common.file_io import (
     OneDrivePathHandler,
 )
 
+
 __all__ = [
     "PathManagerSingleton",
     "PathHandler",
@@ -15,6 +16,7 @@ __all__ = [
 
 PathManagerSingleton = PathManager()
 """A Coach project-specific path manager."""
+
 
 class CoachHandler(PathHandler):
     """
@@ -35,7 +37,7 @@ class CoachHandler(PathHandler):
             `path` (str): The path to the resource with the Coach prefix.
 
         Returns:
-            str: The path to the resource with the source prefix.
+            (str): The path to the resource with the source prefix.
         """
         name = path[len(CoachHandler.PREFIX):]
         return PathManagerSingleton.get_local_path(CoachHandler.SOURCE_PREFIX + name, **kwargs)

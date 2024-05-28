@@ -1,8 +1,8 @@
+from fvcore.common.registry import Registry
 import torch
 
 from coach.config import CfgNode
 from coach.utils.logger import log_api_usage
-from coach.utils.registry import Registry
 
 MODEL_REGISTRY = Registry("MODEL")
 MODEL_REGISTRY.__doc__ = "Registry for the model."

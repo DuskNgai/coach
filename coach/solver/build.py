@@ -3,7 +3,7 @@ import copy
 from enum import Enum
 import itertools
 import logging
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Type, Union
+from typing import Any, Callable, Iterable
 
 from fvcore.common.param_scheduler import (
     CosineParamScheduler,
@@ -23,12 +23,14 @@ from .scheduler import (
     WarmupParamScheduler
 )
 
+
 class GradientClipType(Enum):
     VALUE = "value"
     NORM = "norm"
 
-_GradientClipperInput = Union[torch.Tensor, Iterable[torch.Tensor]]
+_GradientClipperInput = torch.Tensor | Iterable[torch.Tensor]
 _GradientClipper = Callable[[_GradientClipperInput], None]
+
 
 def _create_gradient_clipper(cfg: CfgNode) -> _GradientClipper:
     """
@@ -51,11 +53,11 @@ def _create_gradient_clipper(cfg: CfgNode) -> _GradientClipper:
 
 
 def _generate_optimizer_class_with_gradient_clipping(
-    optimizer: Type[torch.optim.Optimizer],
+    optimizer: torch.optim.Optimizer,
     *,
-    per_param_clipper: Optional[_GradientClipper] = None,
-    global_clipper: Optional[_GradientClipper] = None,
-) -> Type[torch.optim.Optimizer]:
+    per_param_clipper: _GradientClipper | None = None,
+    global_clipper: _GradientClipper | None = None,
+) -> torch.optim.Optimizer:
     """
     Dynamically creates a new type that inherits the type of a given instance
     and overrides the `step` method to add gradient clipping
@@ -83,9 +85,11 @@ def _generate_optimizer_class_with_gradient_clipping(
     )
     return OptimizerWithGradientClip
 
+
 def maybe_add_gradient_clipping(
-    cfg: CfgNode, optimizer: Type[torch.optim.Optimizer]
-) -> Type[torch.optim.Optimizer]:
+    cfg: CfgNode,
+    optimizer: torch.optim.Optimizer
+) -> torch.optim.Optimizer:
     """
     If gradient clipping is enabled through config options, wraps the existing
     optimizer type to become a new dynamically created class OptimizerWithGradientClip
@@ -117,6 +121,7 @@ def maybe_add_gradient_clipping(
         return optimizer
     else:
         return OptimizerWithGradientClip
+
 
 def build_optimizer(cfg: CfgNode, model: nn.Module) -> Optimizer:
     """Build an optimizer from given configuration."""
@@ -150,14 +155,15 @@ def build_optimizer(cfg: CfgNode, model: nn.Module) -> Optimizer:
             adam_args["foreach"] = True
         return maybe_add_gradient_clipping(cfg, torch.optim.Adam(**adam_args))
 
+
 def get_default_optimizer_params(
     model: torch.nn.Module,
-    base_lr: Optional[float] = None,
-    weight_decay: Optional[float] = None,
-    weight_decay_norm: Optional[float] = None,
-    lr_factor_func: Optional[Callable] = None,
-    overrides: Optional[Dict[str, Dict[str, float]]] = None,
-) -> List[Dict[str, Any]]:
+    base_lr: float | None = None,
+    weight_decay: float | None = None,
+    weight_decay_norm: float | None = None,
+    lr_factor_func: Callable | None = None,
+    overrides: dict[str, dict[str, float]] | None = None,
+) -> list[dict[str, Any]]:
     """
     Get default param list for optimizer, with support for a few types of
     overrides. If no overrides needed, this is equivalent to `model.parameters()`.
@@ -201,8 +207,8 @@ def get_default_optimizer_params(
         nn.LocalResponseNorm,
     )
 
-    params: List[Dict[str, Any]] = []
-    memo: Set[nn.parameter.Parameter] = set()
+    params: list[dict[str, Any]] = []
+    memo: set[nn.parameter.Parameter] = set()
     for module_name, module in model.named_modules():
         for module_param_name, value in module.named_parameters(recurse=False):
             if not value.requires_grad:
@@ -222,7 +228,8 @@ def get_default_optimizer_params(
             params.append({"params": [value], **hyperparams})
     return reduce_param_groups(params)
 
-def _expand_param_groups(params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
+def _expand_param_groups(params: list[dict[str, Any]]) -> list[dict[str, Any]]:
     # Transform parameter groups into per-parameter structure.
     # Later items in `params` can overwrite parameters set in previous items.
     ret = defaultdict(dict)
@@ -237,7 +244,8 @@ def _expand_param_groups(params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 ret[param].update({"params": [param], **cur_params})
     return list(ret.values())
 
-def reduce_param_groups(params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
+def reduce_param_groups(params: list[dict[str, Any]]) -> list[dict[str, Any]]:
     # Reorganize the parameter groups and merge duplicated groups.
     # The number of parameter groups needs to be as small as possible in order
     # to efficiently use the PyTorch multi-tensor optimizer. Therefore instead
@@ -264,6 +272,7 @@ def reduce_param_groups(params: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             )
         ret.append(cur)
     return ret
+
 
 def build_scheduler(cfg: CfgNode, optimizer: Optimizer) -> LRScheduler:
     """Return a scheduler with a given configuration."""

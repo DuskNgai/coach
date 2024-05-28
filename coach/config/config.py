@@ -1,6 +1,6 @@
 import functools
 import inspect
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 from fvcore.common.config import CfgNode
 from omegaconf import DictConfig
@@ -26,7 +26,7 @@ def _called_with_cfg(*args, **kwargs) -> bool:
     return False
 
 
-def _get_args_from_cfg(from_config_func: Callable[[Any], Dict[str, Any]], *args, **kwargs) -> Dict[str, Any]:
+def _get_args_from_cfg(from_config_func: Callable[[Any], dict[str, Any]], *args, **kwargs) -> dict[str, Any]:
     """
     Get the input arguments of the decorated function from a `CfgNode` object.
 
@@ -35,7 +35,7 @@ def _get_args_from_cfg(from_config_func: Callable[[Any], Dict[str, Any]], *args,
     """
 
     signature = inspect.signature(from_config_func)
-    if list(signature.parameters.keys())[0] != "cfg":
+    if next(signature.parameters.keys()) != "cfg":
         raise ValueError("The first argument of `{}` must be named as `cfg`.".format(from_config_func.__name__))
 
     # Forwarding all arguments to `from_config`, if the arguments of `from_config` are only `*args` or `*kwargs`.
@@ -56,7 +56,7 @@ def _get_args_from_cfg(from_config_func: Callable[[Any], Dict[str, Any]], *args,
     return result
 
 
-def configurable(init_func: Callable = None, *, from_config: Callable[[Any], Dict[str, Any]] = None) -> Callable:
+def configurable(init_func: Callable = None, *, from_config: Callable[[Any], dict[str, Any]] | None = None) -> Callable:
     """
     A decorator of a function or a class `__init__` method,
     to make it configurable by a `CfgNode` object.

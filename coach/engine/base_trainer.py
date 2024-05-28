@@ -12,6 +12,7 @@ from coach.utils.events import EventStorage
 from coach.utils.logger import log_api_usage
 from coach.utils import comm
 
+
 __all__ = [
     "TrainerBase",
 ]
@@ -96,7 +97,7 @@ class TrainerBase(object):
             finally:
                 self.after_train()
 
-    def is_loop_completed(self):
+    def is_loop_completed(self) -> bool:
         """
         `self.iter == max_iter` can be used to check if the training loop
         completed successfully by `after_train`.
@@ -104,30 +105,30 @@ class TrainerBase(object):
         """
         return self.iteration == self.max_iter
 
-    def before_train(self):
+    def before_train(self) -> None:
         for h in self._hooks:
             h.before_train()
 
-    def after_train(self):
+    def after_train(self) -> None:
         self.storage.iteration = self.iteration
         for h in self._hooks:
             h.after_train()
 
-    def before_step(self):
+    def before_step(self) -> None:
         # Maintain the invariant that `storage.iter == trainer.iter`
         self.storage.iteration = self.iteration
         for h in self._hooks:
             h.before_step()
 
-    def after_step(self):
+    def after_step(self) -> None:
         for h in self._hooks:
             h.after_step()
 
-    def after_backward(self):
+    def after_backward(self) -> None:
         for h in self._hooks:
             h.after_backward()
 
-    def step(self):
+    def step(self) -> None:
         raise NotImplementedError()
 
     def state_dict(self) -> dict:
@@ -144,7 +145,7 @@ class TrainerBase(object):
             result["hooks"] = hook_state
         return result
     
-    def load_state_dict(self, state_dict: dict):
+    def load_state_dict(self, state_dict: dict) -> None:
         logger = logging.getLogger(__name__)
         self.iteration = state_dict["iteration"]
         for key, value in state_dict.get("hooks", {}).items():

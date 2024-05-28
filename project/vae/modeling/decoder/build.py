@@ -1,16 +1,15 @@
 import torch
-import torch.nn as nn
 
 from coach.config import CfgNode
 from coach.utils.logger import log_api_usage
-from coach.utils.registry import Registry
+from fvcore.common.registry import Registry
 
 VAE_DECODER_REGISTRY = Registry("VAE_DECODER")
 VAE_DECODER_REGISTRY.__doc__ = """
 The decoder in VAE that output the reconstructed input.
 """
 
-def build_vae_decoder(cfg: CfgNode) -> nn.Module:
+def build_vae_decoder(cfg: CfgNode) -> torch.nn.Module:
     """
     Build the decoder defined by `cfg.MODEL.DECODER.NAME`.
     It does not load checkpoints from `cfg`.

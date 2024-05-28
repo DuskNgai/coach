@@ -14,6 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from .file_io import PathManagerSingleton
 
+
 __all__ = [
     "has_event_storage",
     "get_event_storage",
@@ -34,7 +35,7 @@ class EventStorage(object):
     """
 
     def __init__(self, start_iter: int = 0) -> None:
-        self._iter = start_iter
+        self._iteration = start_iter
         self._prefix = ""
         self._image_data: list[tuple[str, np.ndarray | torch.Tensor, int]] = []
         self._history_buffers = defaultdict(HistoryBuffer)
@@ -43,15 +44,15 @@ class EventStorage(object):
 
     def put_image(self, image_name: str, image: np.ndarray | torch.Tensor) -> None:
         """
-        Add an image to the event storage that will be shown in tensorboard.
+        Add an image to the event storage to be shown in tensorboard.
 
         Args:
             `image_name` (str): the name of the image.
-            `image_tensor` (torch.Tensor): the image tensor.
+            `image` (np.ndarray | torch.Tensor): the image tensor.
                 The image should be in shape (C, H, W) where C = 3.
-                The data type should be uint8 in range [0, 255] or float in range [0, 1].
+                The data type should be either uint8 in range [0, 255] or float in range [0, 1].
         """
-        self._image_data.append((image_name, image, self.iteration))
+        self._image_data.append((image_name, image, self._iteration))
 
     def put_scalar(self, name: str, value: Number, smoothing_hint: bool = True, curr_iter: int = None) -> None:
         """
@@ -65,7 +66,7 @@ class EventStorage(object):
         """
         name = self._prefix + name
         value = float(value)
-        curr_iter = self.iteration if curr_iter is None else curr_iter
+        curr_iter = self._iteration if curr_iter is None else curr_iter
 
         history = self._history_buffers[name]
         history.update(value, curr_iter)
@@ -75,7 +76,7 @@ class EventStorage(object):
         if hint is None:
             self._smoothing_hints[name] = smoothing_hint
         else:
-            assert hint == smoothing_hint, "Scalar {} already has a smoothing hint!".format(name)
+            assert hint == smoothing_hint, "Scalar {} has different 'smoothing_hint' set before.".format(name)
 
     def put_scalars(self, *, smoothing_hint: bool = True, curr_iter: int = None, **kwargs) -> None:
         """
@@ -84,7 +85,7 @@ class EventStorage(object):
         Args:
             `smoothing_hint` (bool): whether the scalar is smoothed when logged.
             `curr_iter` (int): the explicit iteration number to put the scalar.
-            `**kwargs` (dict): the scalars to put.
+            `kwargs` (dict): the key-value pairs of scalars to log.
         """
         for k, v in kwargs.items():
             self.put_scalar(k, v, smoothing_hint, curr_iter)
@@ -92,7 +93,7 @@ class EventStorage(object):
     def history(self, name: str) -> HistoryBuffer:
         """
         Returns:
-            the `HistoryBuffer` object that stores the history of the given scalar.
+            (HistoryBuffer): the `HistoryBuffer` object that stores the history of the given scalar.
         """
         h = self._history_buffers.get(name)
         if h is None:
@@ -102,28 +103,28 @@ class EventStorage(object):
     def histories(self) -> dict[str, HistoryBuffer]:
         """
         Returns:
-            a dict that maps names to `HistoryBuffer` objects.
+            (dict[str, HistoryBuffer]): a dict that maps names to `HistoryBuffer` objects.
         """
         return self._history_buffers
     
     def latest(self) -> dict[str, tuple[Number, int]]:
         """
         Returns:
-            a dict that maps names to (value, iteration) tuples representing the latest scalars.
+            (dict[str, tuple[Number, int]]): a dict that maps names to (value, iteration) tuples representing the latest scalars.
         """
         return self._latest_scalars
 
     def smoothing_hints(self) -> dict[str, bool]:
         """
         Returns:
-            a dict that maps names to boolean indicating whether the data is smoothed.
+            (dict[str, bool]): a dict that maps names to boolean indicating whether the data is smoothed.
         """
         return self._smoothing_hints
 
     def count_samples(self, name: str, window_size: int = 20) -> int:
         """
         Returns:
-            the number of samples logged in history buffer if `window_size` is longer than the history.
+            (int): the number of samples logged in history buffer if `window_size` is longer than the history.
         """
         n_samples = 0
         data = self._history_buffers[name].values()
@@ -137,8 +138,8 @@ class EventStorage(object):
     def latest_with_smoothing_hint(self, window_size: int = 20) -> dict[str, tuple[Number, int]]:
         """
         Returns:
-            a dict that maps names to (value, iteration) tuples representing the latest scalars.
-            If the scalar is marked as smoothed, all the scalars in the window will be smoothed.
+            (dict[str, tuple[Number, int]]): a dict that maps names to (value, iteration) tuples representing the latest scalars.
+                If the scalar is marked as smoothed, all the scalars in the window will be smoothed.
         """
         result = {}
         for name, (value, iteration) in self.latest().items():
@@ -153,28 +154,28 @@ class EventStorage(object):
         """
         Step the iteration at each iteration.
         """
-        self._iter += 1
+        self._iteration += 1
 
     @property
-    def iteration(self):
-        return self._iter
+    def iteration(self) -> int:
+        return self._iteration
 
     @iteration.setter
     def iteration(self, i: int) -> None:
-        self._iter = i
+        self._iteration = i
 
     def clear_images(self) -> None:
         """
         Clear the image data.
         This method should be called after each tensorboard logging.
         """
-        self._image_data = []
+        self._image_data.clear()
 
-    def __enter__(self):
+    def __enter__(self) -> "EventStorage":
         _EVENT_STORAGE_STACK.append(self)
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         assert _EVENT_STORAGE_STACK[-1] is self, "Nesting violation!"
         _EVENT_STORAGE_STACK.pop()
 
@@ -184,7 +185,7 @@ _EVENT_STORAGE_STACK: list[EventStorage] = []
 
 def has_event_storage() -> bool:
     """
-    Whether there is an `EventStorage` in the stack.
+    Check if there are any `EventStorage` in the stack.
     """
     return len(_EVENT_STORAGE_STACK) > 0
 
@@ -202,13 +203,13 @@ class EventWriter(object):
     Base class for writers that can write events to EventStorage.
     """
 
-    def write(self):
+    def write(self) -> None:
         """
         Write the events in the EventStorage to file.
         """
         raise NotImplementedError
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the writer.
         """
@@ -225,8 +226,8 @@ class CommonMetricPrinter(EventWriter):
         `max_iter` (int): the maximum number of iterations.
         `window_size` (int): the window size to smooth scalars.
     """
-    def __init__(self, max_iter: int = None, window_size: int = 20):
-        self.logger = logging.getLogger("Coach")
+    def __init__(self, max_iter: int | None = None, window_size: int = 20) -> None:
+        self.logger = logging.getLogger("coach.utils.events")
         self._max_iter = max_iter
         self._window_size = window_size
         self._last_write_time = None
@@ -243,22 +244,23 @@ class CommonMetricPrinter(EventWriter):
         except KeyError:
             eta = None
             if self._last_write_time is not None:
-                estimated_iter_time = (time.perf_counter() - self._last_write_time[1]) / (iteration - self._last_write_time[0])
+                last_iteration, last_time = self._last_write_time
+                estimated_iter_time = (time.perf_counter() - last_time) / (iteration - last_iteration)
                 eta_seconds = estimated_iter_time * (self._max_iter - iteration - 1)
                 eta = str(datetime.timedelta(seconds=int(eta_seconds)))
             self._last_write_time = (iteration, time.perf_counter())
             return eta
 
-    def write(self):
+    def write(self) -> None:
         storage = get_event_storage()
         iteration = storage.iteration
 
-        # No data logged if training process is ended.
+        # No data logged if training process has ended.
         if iteration == self._max_iter:
             return
 
         try:
-            avg_data_time = storage.history("data_time").median(
+            avg_data_time = storage.history("data_time").avg(
                 storage.count_samples("data_time", self._window_size)
             )
             last_data_time = storage.history("data_time").latest()
@@ -281,7 +283,7 @@ class CommonMetricPrinter(EventWriter):
         eta = self._get_eta(storage)
 
         if torch.cuda.is_available():
-            max_memory = torch.cuda.max_memory_allocated() / 1024.0 / 1024.0
+            max_memory = torch.cuda.max_memory_allocated() / 1e6
         else:
             max_memory = None
 
@@ -295,12 +297,12 @@ class CommonMetricPrinter(EventWriter):
                 ]),
                 metrics="  ".join([
                     "{}: {:.4f}".format(name, value.median(storage.count_samples(name, self._window_size)))
-                    for name, value in storage.histories().items() if "metric" in name
+                    for name, value in storage.histories().items() if "loss" not in name
                 ]),
                 time="avg time: {:.4f} (last: {:.4f})".format(avg_time, last_time) if avg_time is not None else "",
                 data_time="avg data time: {:.4f} (last: {:.4f})".format(avg_data_time, last_data_time) if avg_data_time is not None else "",
                 lr="lr: {:.4e}".format(lr) if lr is not None else "N/A",
-                memory="max memory: {:.4f} MB".format(max_memory) if max_memory is not None else "",
+                memory="max memory: {:.2f} MiB".format(max_memory) if max_memory is not None else "",
             )
         )
 
@@ -308,8 +310,7 @@ class CommonMetricPrinter(EventWriter):
 class JSONWriter(EventWriter):
     """
     Write scalars to a json file.
-    For each log iteration, the scalars will be stored in json file in one line,
-    which is easier to parse.
+    For each log iteration, the scalars will be stored in json file in one line for easier parse.
 
     Args:
         `file_path` (str): the json path to store the scalars.

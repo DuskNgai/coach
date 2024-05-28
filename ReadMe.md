@@ -16,9 +16,9 @@ pip install fvcore omegaconf
 
 ```bash
 # NeRF with blender dataset
-python tools/train_net.py --config-file project/nerf/config/blender.yaml
+python tools/train.py --config-file project/nerf/config/blender.yaml
 # VAE with MNIST dataset
-python tools/train_net.py --config-file project/vae/config/mnist.yaml
+python tools/train.py --config-file project/vae/config/mnist.yaml
 ```
 
 在环境中可以设定环境变量。可选的有

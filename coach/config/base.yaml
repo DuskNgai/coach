@@ -20,6 +20,10 @@ MODEL:
   NAME:
   WEIGHTS:
 
+  CRITERION:
+    NAME:
+    TYPE:
+
 SOLVER:
   AMP:
     ENABLED: false

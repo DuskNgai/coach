@@ -27,6 +27,7 @@ from .base_trainer import TrainerBase
 from .amp_trainer import AMPTrainer
 from .simple_trainer import SimpleTrainer
 
+
 __all__ = [
     "create_ddp_model",
     "default_argument_parser",

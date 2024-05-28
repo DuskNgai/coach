@@ -11,7 +11,9 @@ import PIL
 import torch
 import torchvision
 
+
 __all__ = ["collect_env_info"]
+
 
 def collect_torch_env() -> str:
     try:
@@ -24,18 +26,19 @@ def collect_torch_env() -> str:
 
         return get_pretty_env_info()
 
+
 def get_env_module() -> tuple[str, str]:
     env_module = "COACH_ENV_MODULE"
     return env_module, os.environ.get(env_module, "<not set>")
 
-def detect_compute_compatibility(CUDA_HOME, so_file) -> str:
+
+def detect_compute_compatibility(CUDA_HOME: str | None, so_file: str | None) -> str:
     try:
         cuobjdump = os.path.join(CUDA_HOME, "bin", "cuobjdump")
         if os.path.isfile(cuobjdump):
             output = subprocess.check_output(
                 "'{}' --list-elf '{}'".format(cuobjdump, so_file), shell=True
-            )
-            output = output.decode("utf-8").strip().split("\n")
+            ).decode("utf-8").strip().split("\n")
             arch = []
             for line in output:
                 line = re.findall(r"\.sm_([0-9]*)\.", line)[0]
@@ -48,9 +51,9 @@ def detect_compute_compatibility(CUDA_HOME, so_file) -> str:
         # unhandled failure
         return so_file
 
+
 def collect_env_info() -> list[tuple[str, str]]:
     has_gpu = torch.cuda.is_available()
-    torch_version = torch.__version__
 
     from torch.utils.cpp_extension import CUDA_HOME, ROCM_HOME
 
@@ -61,7 +64,7 @@ def collect_env_info() -> list[tuple[str, str]]:
 
     data = []
     data.append(("sys.platform", sys.platform)) # check-template.yml depends on it
-    data.append(("Python", sys.version.replace("\n", "")))
+    data.append(("python", sys.version.replace("\n", "")))
     data.append(("numpy", np.__version__))
 
     try:
@@ -74,7 +77,7 @@ def collect_env_info() -> list[tuple[str, str]]:
         data.append(("coach", "imported a wrong installation"))
 
     data.append(get_env_module())
-    data.append(("PyTorch", torch_version + " @" + os.path.dirname(torch.__file__)))
+    data.append(("PyTorch", torch.__version__ + " @" + os.path.dirname(torch.__file__)))
     data.append(("PyTorch debug build", torch.version.debug))
     try:
         data.append(("torch._C._GLIBCXX_USE_CXX11_ABI", torch._C._GLIBCXX_USE_CXX11_ABI))
@@ -131,6 +134,7 @@ def collect_env_info() -> list[tuple[str, str]]:
         data.append(("fvcore", fvcore.__version__))
     except (ImportError, AttributeError):
         pass
+
     try:
         import iopath
 

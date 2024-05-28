@@ -2,7 +2,7 @@ import torch
 
 from coach.config import CfgNode
 from coach.utils.logger import log_api_usage
-from coach.utils.registry import Registry
+from fvcore.common.registry import Registry
 
 from .renderer import Renderer
 

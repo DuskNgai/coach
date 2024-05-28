@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.distributed as dist
 
+
 def get_world_size() -> int:
     """
     Returns:
@@ -50,14 +51,15 @@ _MISSING_LOCAL_PG_ERROR = (
 def create_local_process_group(num_gpus_per_machine: int) -> None:
     """
     Create a local process group for processes on the same machine.
-    Before calling functions in `comm`, you need to first call this function.
+    Before calling functions in this file, you need to first call this function.
+    You only need to call this function once on each machine.
 
     Args:
         `num_gpus_per_machine` (int): The number of GPUs per machine.
     """
     global _LOCAL_PROCESS_GROUP
     assert _LOCAL_PROCESS_GROUP is None, "Local process group already created!"
-    assert get_world_size() % num_gpus_per_machine == 0
+    assert get_world_size() % num_gpus_per_machine == 0, "Number of GPUs per machine should divide the world size."
 
     num_machines = get_world_size() // num_gpus_per_machine
     machine_rank = get_rank() // num_gpus_per_machine
@@ -128,7 +130,7 @@ def _get_global_gloo_group() -> dist.ProcessGroup:
         (dist.ProcessGroup): The global Gloo process group.
     """
     if dist.get_backend() == dist.Backend.NCCL:
-        return dist.new_group(backend="gloo")
+        return dist.new_group(backend=dist.Backend.GLOO)
     else:
         return dist.group.WORLD
 
@@ -136,29 +138,31 @@ def _get_global_gloo_group() -> dist.ProcessGroup:
 T = TypeVar('T')
 
 
-def all_gather(data: T, group=None) -> list[T]:
+def all_gather(data: T, group: dist.ProcessGroup | None = None) -> list[T]:
     """
     Run all_gather on arbitrary picklable data (not necessarily tensors).
     All gather means gather data from all processes to all processes.
 
     Args:
-        `data` (Any): Any picklable object.
+        `data` (T): Any picklable object.
         `group` (dist.ProcessGroup): The process group to gather results from.
             By default, a group containing all ranks on gloo backend.
 
     Returns:
-        (list[Any]): A list containing all data from each rank.
+        (list[T]): A list containing all data from each rank.
     """
     if get_world_size() == 1:
         return [data]
+
+    # Use CPU group to reduce GPU RAM usage.
     if group is None:
         group = _get_global_gloo_group()
 
     world_size = dist.get_world_size(group=group)
     if world_size == 1:
         return [data]
-    
-    buffer = [None for _ in range(world_size)]
+
+    buffer = [None] * world_size
     dist.all_gather_object(buffer, data, group=group)
     return buffer
 
@@ -169,13 +173,13 @@ def gather(data: T, dst: int = 0, group=None) -> list[T]:
     Gather means gather data from all processes to one process.
 
     Args:
-        `data` (Any): Any picklable object.
+        `data` (T): Any picklable object.
         `dst` (int): The rank of the destination process, default to main process.
         `group` (dist.ProcessGroup): The process group to gather results from.
             By default, a group containing all ranks on gloo backend.
 
     Returns:
-        (list[Any]): A list containing all data from each rank.
+        (list[T]): A list containing all data from each rank.
     """
     if get_world_size() == 1:
         return [data]
@@ -188,7 +192,7 @@ def gather(data: T, dst: int = 0, group=None) -> list[T]:
 
     rank = get_rank(group=group)
     if rank == dst:
-        buffer = [None for _ in range(world_size)]
+        buffer = [None] * world_size
         dist.gather_object(data, buffer, dst=dst, group=group)
         return buffer
     else:
@@ -196,12 +200,12 @@ def gather(data: T, dst: int = 0, group=None) -> list[T]:
         return []
 
 
-def shared_random_seed():
+def shared_random_seed() -> int:
     """
     Returns:
         (int): a random number that is the same across all workers.
-        If workers need a shared RNG, they can use this shared seed to
-        create one.
+            If workers need a shared RNG, they can use this shared seed to
+            create one.
 
     All workers must call this function, otherwise it will deadlock.
     """

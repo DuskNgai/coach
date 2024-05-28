@@ -1,7 +1,6 @@
 import logging
 import os
 from typing import Any
-from urllib.parse import urlparse
 
 from fvcore.common.checkpoint import _IncompatibleKeys, Checkpointer
 import torch
@@ -28,15 +27,14 @@ class CoachCheckpointer(Checkpointer):
             save_to_disk=comm.is_main_process() if save_to_disk is None else save_to_disk,
             **checkpointables
         )
-        self.path_manager = PathManagerSingleton
 
-    def load(self, path: str, *args, **kwargs):
+    def load(self, path: str, *args, **kwargs) -> dict[str, Any]:
         logger = logging.getLogger(__name__)
         logger.info("[CoachCheckpointer] Loading checkpoint from {}.".format(path))
 
         need_sync = False
         if path and isinstance(self.model, DistributedDataParallel):
-            path = self.path_manager.get_local_path(path)
+            path = PathManagerSingleton.get_local_path(path)
             this_process_has_file = os.path.isfile(path)
             all_processes_have_file = comm.all_gather(this_process_has_file)
 
@@ -45,7 +43,7 @@ class CoachCheckpointer(Checkpointer):
                 raise FileNotFoundError("Checkpoint {} not found on main process!".format(path))
             if not all(all_processes_have_file):
                 logger.warning(
-                    "Checkpoint {} not found on all processes!".format(path)
+                    "Checkpoint {} not found on some processes!".format(path)
                 )
                 need_sync = True
             if not this_process_has_file:
@@ -59,7 +57,7 @@ class CoachCheckpointer(Checkpointer):
 
         return result
 
-    def _load_file(self, filename: str) -> Any:
+    def _load_file(self, filename: str) -> dict[str, Any]:
         loaded = self._torch_load(filename)
         if "model" not in loaded:
             loaded = {"model": loaded}

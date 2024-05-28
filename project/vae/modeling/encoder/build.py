@@ -1,16 +1,16 @@
 import torch
-import torch.nn as nn
 
 from coach.config import CfgNode
 from coach.utils.logger import log_api_usage
-from coach.utils.registry import Registry
+from fvcore.common.registry import Registry
+
 
 VAE_ENCODER_REGISTRY = Registry("VAE_ENCODER")
 VAE_ENCODER_REGISTRY.__doc__ = """
 The encoder in VAE that may output mean and variance.
 """
 
-def build_vae_encoder(cfg: CfgNode) -> nn.Module:
+def build_vae_encoder(cfg: CfgNode) -> torch.nn.Module:
     """
     Build the encoder defined by `cfg.MODEL.ENCODER.NAME`.
     It does not load checkpoints from `cfg`.

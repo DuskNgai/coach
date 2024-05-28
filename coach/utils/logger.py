@@ -3,12 +3,13 @@ import functools
 import logging
 import os
 import sys
-from typing import IO, Optional, Union
+from typing import IO
 
 from termcolor import colored
 import torch
 
 from .file_io import PathManagerSingleton
+
 
 __all__ = [
     "setup_logger",
@@ -18,8 +19,8 @@ __all__ = [
 class _ColoredFormatter(logging.Formatter):
     def __init__(self, *args, **kwargs) -> None:
         self._root_name = kwargs.pop("root_name") + "."
-        self._abbrev_name = kwargs.pop("abbrev_name", "")
-        if self._abbrev_name != "":
+        self._abbrev_name = kwargs.pop("abbrev_name", None)
+        if self._abbrev_name is not None:
             self._abbrev_name += "."
         super().__init__(*args, **kwargs)
 
@@ -34,14 +35,15 @@ class _ColoredFormatter(logging.Formatter):
             return log
         return prefix + " " + log
 
+
 @functools.lru_cache()
 def setup_logger(
-    output: Optional[str] = None,
+    output: str | None = None,
     distributed_rank: int = 0,
     *,
     color: bool = True,
     name: str = "Coach",
-    abbrev_name: Optional[str] = None,
+    abbrev_name: str | None = None,
     enable_propagation: bool = False,
     configure_stdout: bool = True,
 ) -> logging.Logger:
@@ -99,8 +101,9 @@ def setup_logger(
 
     return logger
 
+
 @functools.lru_cache(maxsize=None)
-def _cached_log_stream(filename: str) -> Union[IO[bytes], IO[str]]:
+def _cached_log_stream(filename: str) -> IO[bytes] | IO[str]:
     """
     Cache the opened file object, so that different calls to `setup_logger`
     with the same filename will write to the same file object.
@@ -108,6 +111,7 @@ def _cached_log_stream(filename: str) -> Union[IO[bytes], IO[str]]:
     io = PathManagerSingleton.open(filename, "a")
     atexit.register(io.close)
     return io
+
 
 def log_api_usage(identifier: str) -> None:
     """

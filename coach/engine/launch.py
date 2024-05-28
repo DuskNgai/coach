@@ -16,6 +16,7 @@ __all__ = [
 
 DEFAULT_TIMEOUT = timedelta(minutes=30)
 
+
 def _find_free_port() -> int:
     import socket
 
@@ -26,6 +27,7 @@ def _find_free_port() -> int:
     sock.close()
     # NOTE: there is still a chance the port could be taken by other processes.
     return port
+
 
 def launch(
     main_func: Callable[..., Any],
@@ -80,6 +82,7 @@ def launch(
 
     else:
         main_func(*args)
+
 
 def _distributed_worker(
     local_rank: int,

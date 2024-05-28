@@ -16,8 +16,6 @@
 
 ### `config/config.py`
 
-函数 `get_cfg`。返回一个可编辑的 `CfgNode`，包含了所有默认配置参数。
-
 函数 `configurable`。作为一个装饰器，将函数或者 `__init__` 方法装饰为可配置的函数。装饰后的函数可以接受一个 `CfgNode` 类型的参数 `cfg`，并且可以通过 `cfg` 获取配置参数。部分参数会被转发到配置函数中，而不是直接传递给被装饰的函数。具体使用方法见其注释。
 
 ### `config/defaults.py`
@@ -67,7 +65,7 @@
 
 ### `engine/hooks.py`
 
-类 `IterationTimer`。迭代计时器。在训练过程中，记录每个迭代的时间。
+类 `IterationTimer`。迭代计时器。在训练过程中，记录每次迭代的时间。
 
 类 `PeriodicWriter`。周期性的指标打印器。在训练过程中，每隔一段时间打印一次指标。
 
@@ -75,9 +73,9 @@
 
 ### `engine/launch.py`
 
-函数 `launch`。分布式训练的入口。如果进程数为 1，则直接调用 `main` 函数。如果机器数为 1，则自动设置端口。对于多机器多进程，初始化多机通信，组成局部通信，同步所有进程以防止某个进程初始化失败。随后在每个机器上启动一个新的进程，每个进程调用 `main` 函数。
+函数 `launch`。分布式训练的入口。如果进程数为 1，则直接调用 `main` 函数。如果机器数为 1，则自动设置端口。对于多机器多进程，在每个机器上启动和 `num_gpu` 个新的进程，并且调用 `_distributed_worker` 函数。
 
-函数 `_distributed_worker`。划分全局进程和局部进程，同步，每个进程调用 `main` 函数。
+函数 `_distributed_worker`。初始化多机通信，组成局部通信，同步所有进程以防止某个进程初始化失败。随后，每个进程调用 `main` 函数。
 
 ## `modeling`
 
@@ -104,6 +102,7 @@
 ### `utils/collect_env.py`
 
 函数 `collect_env_info`。收集尽可能多的环境信息，包括但不限于：
+- 系统信息
 - Python, CUDA, PyTorch, TorchVision, numpy, pillow, fvcore 等的版本
 - CUDA, GPU 的信息
 
@@ -115,7 +114,7 @@
 
 函数 `is_main_process`。判断当前进程是否为主进程。
 
-函数 `create_local_process_group`。把同一机器的进程编为一个通信组。
+函数 `create_local_process_group`。把同一机器的进程编为一个通信组，用于局部通信。
 
 函数 `get_local_process_group`。获得局部通信组。
 
@@ -125,9 +124,15 @@
 
 函数 `synchronize`。阻塞并同步所有进程。
 
+函数 `all_gather`。收集所有进程的数据，并广播给所有进程。
+
+函数 `gather`。收集所有进程的数据，并广播给指定进程。
+
 ### `utils/env.py`
 
 函数 `seed_all_rng`。设置随机数种子。如果给定的种子为 `None`，则使用当前时间戳和进程编号作为种子。
+
+函数 `setup_environment`。收集自定义的环境变量，导入其中的自定义模块。
 
 ### `utils/events.py`
 

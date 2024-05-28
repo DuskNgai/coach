@@ -13,6 +13,7 @@ from coach.utils.events import get_event_storage
 
 from .base_trainer import *
 
+
 __all__ = [
     "SimpleTrainer"
 ]
